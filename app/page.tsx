@@ -17,7 +17,7 @@ const Home = () => {
         <div className="w-1/2 flex flex-col gap-[1vmax]">
           <div className="h-3/5 bg-secondary rounded-xl p-[1vmax] flex items-end relative overflow-hidden">
             <div className="grain opacity-10" />
-            <h1 className="font-display font-black uppercase text-[2vmax] leading-none z-10">
+            <h1 className="font-display font-black uppercase text-[3vmax] leading-none z-10">
               Embrace your own personal style.
             </h1>
             <div className="arrow bg-primary absolute w-1/6 aspect-square top-0 right-0" />
@@ -27,7 +27,7 @@ const Home = () => {
               <Image src="/hero2.jpeg" alt="hero-2" fill style={{ objectFit: "cover" }} />
               <Link
                 href="/womenswear"
-                className="w-full h-full absolute flex items-end p-[1vmax] text-[0.65vmax] leading-none font-black uppercase backdrop-blur-xl transition-opacity duration-500 opacity-0 hover:opacity-100"
+                className="w-full h-full absolute flex items-end p-[1vmax] text-[0.75vmax] leading-none font-black uppercase backdrop-blur-xl transition-opacity duration-500 opacity-0 hover:opacity-100"
               >
                 <p>Womenswear</p>
               </Link>
@@ -36,7 +36,7 @@ const Home = () => {
               <Image src="/hero3.jpeg" alt="hero-3" fill style={{ objectFit: "cover" }} />
               <Link
                 href="/menswear"
-                className="w-full h-full absolute flex items-end p-[1vmax] text-[0.65vmax] leading-none font-black uppercase backdrop-blur-xl transition-opacity duration-500 opacity-0 hover:opacity-100"
+                className="w-full h-full absolute flex items-end p-[1vmax] text-[0.75vmax] leading-none font-black uppercase backdrop-blur-xl transition-opacity duration-500 opacity-0 hover:opacity-100"
               >
                 <p>Menswear</p>
               </Link>

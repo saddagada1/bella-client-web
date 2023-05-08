@@ -19,7 +19,7 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
       >
         <Navbar />
         <div className="w-full flex justify-center mt-[6vmax] py-[0.5vmax] border-b-[0.1vmin] border-solid border-secondary">
-          <div className="2xl:w-[60%] xl:w-[70%] lg:w-[80%] md:w-[90%] sm:w-[95%] flex justify-between text-[0.6vmax] font-bold uppercase">
+          <div className="2xl:w-[60%] xl:w-[70%] lg:w-[80%] md:w-[90%] sm:w-[95%] flex justify-between text-[0.75vmax] font-bold uppercase">
             <Link href="/profile">Trending</Link>
             <Link href="/profile">Menswear</Link>
             <Link href="/profile">Womenswear</Link>
