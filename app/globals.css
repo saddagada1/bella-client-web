@@ -3,25 +3,85 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  --primary-colour: #f2f2f2;
+  --secondary-colour: #151515;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
+*::selection {
+  background-color: var(--secondary-colour);
+  color: var(--primary-colour);
+}
+
+.arrow {
+  -webkit-mask: url("../public/arrow.svg");
+  mask: url("../public/arrow.svg");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+.moon {
+  background-color: var(--primary-colour);
+  background-image: radial-gradient(
+    ellipse farthest-corner at 4px 4px,
+    var(--secondary-colour),
+    var(--secondary-colour) 50%,
+    var(--primary-colour) 50%
+  );
+  background-size: 4px 4px;
+}
+
+.grain {
+  background-image: url("../public/1k_Dissolve_Noise_Texture.png");
+  height: 100%;
+  width: 100%;
+  top: 0;
+  left: 0;
+  position: absolute;
+  pointer-events: none;
+}
+
+.anim-grain {
+  background-image: url("../public/1k_Dissolve_Noise_Texture.png");
+  height: 300%;
+  width: 300%;
+  position: absolute;
+  pointer-events: none;
+  animation: grain 8s steps(10) infinite;
+}
+
+@keyframes grain {
+  0%,
+  100% {
+    transform: translate(-15%, -20%);
   }
-}
-
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  10% {
+    transform: translate(-5%, -10%);
+  }
+  20% {
+    transform: translate(-15%, -20%);
+  }
+  30% {
+    transform: translate(-5%, -10%);
+  }
+  40% {
+    transform: translate(-15%, -20%);
+  }
+  50% {
+    transform: translate(-5%, -10%);
+  }
+  60% {
+    transform: translate(-15%, -20%);
+  }
+  70% {
+    transform: translate(-5%, -10%);
+  }
+  80% {
+    transform: translate(-15%, -20%);
+  }
+  90% {
+    transform: translate(-5%, -10%);
+  }
+  100% {
+    transform: translate(-15%, -20%);
+  }
 }
