@@ -11,6 +11,7 @@ import { DominoSpinner } from "react-spinners-kit";
 import { fetchRefreshToken } from "@/utils/fetchWithAxios";
 import { calcExpiresIn } from "@/utils/calc";
 import { setAuthentication } from "@/redux/slices/authSlice";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 const Loading = () => {
   const dispatch = useAppDispatch();
@@ -47,7 +48,7 @@ const Loading = () => {
 
   return (
     <div className="w-screem h-screen flex justify-center items-center">
-      <DominoSpinner size={10} color="#151515" loading={true} sizeUnit="vmax" />
+      <DominoSpinner size={8} color="#151515" loading={true} sizeUnit="vmax" />
     </div>
   );
 };
@@ -67,11 +68,13 @@ const App = ({ Component, pageProps }: AppProps) => {
   }
 
   return (
-    <UrqlProvider value={urqlClient}>
-      <Layout>
-        <Component {...pageProps} />
-      </Layout>
-    </UrqlProvider>
+    <GoogleOAuthProvider clientId={process.env.GOOGLE_OAUTH_CLIENT_ID!}>
+      <UrqlProvider value={urqlClient}>
+        <Layout>
+          <Component {...pageProps} />
+        </Layout>
+      </UrqlProvider>
+    </GoogleOAuthProvider>
   );
 };
 

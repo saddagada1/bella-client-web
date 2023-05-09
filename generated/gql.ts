@@ -14,8 +14,10 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  */
 const documents = {
     "mutation Login($loginOptions: LoginInput!) {\n  login(loginOptions: $loginOptions) {\n    errors {\n      field\n      message\n    }\n    user {\n      id\n      verified\n      email\n      username\n      created_at\n      updated_at\n    }\n    auth {\n      access_token\n      expires_in\n    }\n  }\n}": types.LoginDocument,
+    "mutation LoginWithGoogle {\n  loginWithGoogle {\n    errors {\n      field\n      message\n    }\n    user {\n      id\n      verified\n      email\n      username\n      created_at\n      updated_at\n    }\n    auth {\n      access_token\n      expires_in\n    }\n  }\n}": types.LoginWithGoogleDocument,
     "mutation Logout {\n  logout\n}": types.LogoutDocument,
     "mutation Register($registerOptions: RegisterInput!) {\n  register(registerOptions: $registerOptions) {\n    errors {\n      field\n      message\n    }\n    user {\n      id\n      verified\n      email\n      username\n      created_at\n      updated_at\n    }\n    auth {\n      access_token\n      expires_in\n    }\n  }\n}": types.RegisterDocument,
+    "mutation RegisterWithGoogle($username: String!) {\n  registerWithGoogle(username: $username) {\n    errors {\n      field\n      message\n    }\n    user {\n      id\n      verified\n      email\n      username\n      created_at\n      updated_at\n    }\n    auth {\n      access_token\n      expires_in\n    }\n  }\n}": types.RegisterWithGoogleDocument,
 };
 
 /**
@@ -39,11 +41,19 @@ export function graphql(source: "mutation Login($loginOptions: LoginInput!) {\n 
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "mutation LoginWithGoogle {\n  loginWithGoogle {\n    errors {\n      field\n      message\n    }\n    user {\n      id\n      verified\n      email\n      username\n      created_at\n      updated_at\n    }\n    auth {\n      access_token\n      expires_in\n    }\n  }\n}"): (typeof documents)["mutation LoginWithGoogle {\n  loginWithGoogle {\n    errors {\n      field\n      message\n    }\n    user {\n      id\n      verified\n      email\n      username\n      created_at\n      updated_at\n    }\n    auth {\n      access_token\n      expires_in\n    }\n  }\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "mutation Logout {\n  logout\n}"): (typeof documents)["mutation Logout {\n  logout\n}"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "mutation Register($registerOptions: RegisterInput!) {\n  register(registerOptions: $registerOptions) {\n    errors {\n      field\n      message\n    }\n    user {\n      id\n      verified\n      email\n      username\n      created_at\n      updated_at\n    }\n    auth {\n      access_token\n      expires_in\n    }\n  }\n}"): (typeof documents)["mutation Register($registerOptions: RegisterInput!) {\n  register(registerOptions: $registerOptions) {\n    errors {\n      field\n      message\n    }\n    user {\n      id\n      verified\n      email\n      username\n      created_at\n      updated_at\n    }\n    auth {\n      access_token\n      expires_in\n    }\n  }\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "mutation RegisterWithGoogle($username: String!) {\n  registerWithGoogle(username: $username) {\n    errors {\n      field\n      message\n    }\n    user {\n      id\n      verified\n      email\n      username\n      created_at\n      updated_at\n    }\n    auth {\n      access_token\n      expires_in\n    }\n  }\n}"): (typeof documents)["mutation RegisterWithGoogle($username: String!) {\n  registerWithGoogle(username: $username) {\n    errors {\n      field\n      message\n    }\n    user {\n      id\n      verified\n      email\n      username\n      created_at\n      updated_at\n    }\n    auth {\n      access_token\n      expires_in\n    }\n  }\n}"];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};

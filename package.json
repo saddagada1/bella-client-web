@@ -10,6 +10,7 @@
     "gen": "graphql-codegen --config codegen.ts"
   },
   "dependencies": {
+    "@react-oauth/google": "^0.11.0",
     "@reduxjs/toolkit": "^1.9.5",
     "@types/node": "20.1.0",
     "@types/react": "18.2.5",

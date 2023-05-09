@@ -8,12 +8,20 @@ import { BiArrowBack } from "react-icons/bi";
 import { BsGoogle } from "react-icons/bs";
 import { MdEmail } from "react-icons/md";
 import { useMutation } from "urql";
-import { AuthResponse, LoginDocument, LogoutDocument, RegisterDocument } from "@/generated/graphql";
+import {
+  AuthResponse,
+  LoginDocument,
+  LoginWithGoogleDocument,
+  LogoutDocument,
+  RegisterDocument,
+  RegisterWithGoogleDocument,
+} from "@/generated/graphql";
 import { trimString } from "@/utils/trimString";
 import { toErrorMap } from "@/utils/toErrorMap";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { resetAuthentication, setAuthentication } from "@/redux/slices/authSlice";
 import { calcExpiresIn } from "@/utils/calc";
+import { useGoogleLogin } from "@react-oauth/google";
 
 interface SignUpValues {
   username: string;
@@ -71,6 +79,7 @@ const SignUpWithEmail: React.FC<SignUpWithEmailValues> = ({ setEmail, onAuth, se
     }
     return error;
   };
+
   return (
     <Formik
       innerRef={signUpFormRef}
@@ -100,10 +109,10 @@ const SignUpWithEmail: React.FC<SignUpWithEmailValues> = ({ setEmail, onAuth, se
     >
       {({ errors, touched, isSubmitting }) => (
         <Form className="w-full pt-[1vmax]">
-          <h3 className="text-[1.15vmax] flex items-center font-extrabold mb-[0.75vmax]">
-            <BiArrowBack onClick={() => setEmail(false)} className="mr-[0.5vmax]" />
+          <h2 className="text-[1.15vmax] flex items-center font-extrabold mb-[0.75vmax]">
+            <BiArrowBack onClick={() => setEmail(false)} className="cursor-pointer mr-[0.5vmax]" />
             Sign Up
-          </h3>
+          </h2>
           <div className="flex justify-between text-[0.75vmax] font-bold my-[0.5vmax]">
             <label htmlFor="username">Username</label>
             {errors.username && touched.username && (
@@ -180,28 +189,140 @@ interface SignUpHomeValues {
 }
 
 const SignUpHome: React.FC<SignUpHomeValues> = ({ setEmail, setView, onAuth, setDisabled }) => {
+  const [username, setUsername] = useState(false);
+  const [googleAuthCode, setGoogleAuthCode] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [, registerWithGoogle] = useMutation(RegisterWithGoogleDocument);
+
+  const login = useGoogleLogin({
+    onSuccess: (codeResponse) => {
+      setGoogleAuthCode(codeResponse.code);
+      setUsername(true);
+    },
+    onError: () => {
+      setError("Something went wrong...");
+      setDisabled(false);
+    },
+    onNonOAuthError: () => {
+      setDisabled(false);
+    },
+    flow: "auth-code",
+  });
+
+  const validateUsername = (value: string) => {
+    let error;
+    if (!value) {
+      error = "Required";
+    } else if (value.length < 5) {
+      error = "Min 5 Chars Required";
+    }
+    return error;
+  };
+
   return (
     <>
-      <h3 className="w-full text-[1.15vmax] flex items-center font-extrabold my-[1vmax]">
-        Sign Up
-      </h3>
-      <button className="w-full flex items-center justify-center mb-[1vmax] py-[0.5vmax] border-[0.1vmin] border-solid border-secondary rounded-sm text-[0.75vmax] font-bold">
-        <BsGoogle className="mr-[1vmax]" /> Continue with Google
-      </button>
-      <div className="w-full pt-[1vmax] border-t-[0.1vmin] border-solid border-secondary">
-        <button
-          onClick={() => setEmail(true)}
-          className="w-full flex items-center justify-center py-[0.5vmax] bg-secondary text-primary rounded-sm text-[0.75vmax] font-bold border-[0.1vmin] border-solid border-secondary"
+      {!username && !googleAuthCode ? (
+        <>
+          <h2 className="w-full text-[1.15vmax] flex items-center font-extrabold my-[1vmax]">
+            Sign Up
+            {error && (
+              <span className="bg-red-300 text-[0.75vmax] font-bold text-red-500 px-[0.25vmax] rounded-sm">
+                {error}
+              </span>
+            )}
+          </h2>
+          <button
+            onClick={() => {
+              setDisabled(true);
+              setError(null);
+              login();
+            }}
+            className="w-full flex items-center justify-center mb-[1vmax] py-[0.5vmax] border-[0.1vmin] border-solid border-secondary rounded-sm text-[0.75vmax] font-bold"
+          >
+            <BsGoogle className="mr-[1vmax]" /> Continue with Google
+          </button>
+          <div className="w-full pt-[1vmax] border-t-[0.1vmin] border-solid border-secondary">
+            <button
+              onClick={() => setEmail(true)}
+              className="w-full flex items-center justify-center py-[0.5vmax] bg-secondary text-primary rounded-sm text-[0.75vmax] font-bold border-[0.1vmin] border-solid border-secondary"
+            >
+              <MdEmail className="mr-[1vmax] text-[0.9vmax]" /> Sign Up with Email
+            </button>
+            <button
+              onClick={() => setView("login")}
+              className="w-full text-center mt-[1vmax] text-[0.6vmax] underline font-bold"
+            >
+              {"Already have an account? Log in."}
+            </button>
+          </div>
+        </>
+      ) : (
+        <Formik
+          initialValues={{
+            username: "",
+          }}
+          onSubmit={async (
+            values: { username: string },
+            { setErrors }: FormikHelpers<{ username: string }>
+          ) => {
+            setDisabled(true);
+            const response = await registerWithGoogle(values, {
+              fetchOptions: {
+                credentials: "include",
+                headers: {
+                  Authorization: `Basic ${googleAuthCode}`,
+                },
+              },
+            });
+            if (response.data?.registerWithGoogle.errors) {
+              setErrors(toErrorMap(response.data.registerWithGoogle.errors));
+            } else if (
+              response.data?.registerWithGoogle.user &&
+              response.data?.registerWithGoogle.auth
+            ) {
+              onAuth(response.data.registerWithGoogle);
+              setDisabled(false);
+            }
+          }}
         >
-          <MdEmail className="mr-[1vmax] text-[0.9vmax]" /> Sign Up with Email
-        </button>
-        <button
-          onClick={() => setView("login")}
-          className="w-full text-center mt-[1vmax] text-[0.6vmax] underline font-bold"
-        >
-          {"Already have an account? Log in."}
-        </button>
-      </div>
+          {({ errors, touched, isSubmitting }) => (
+            <Form className="w-full pt-[1vmax]">
+              <h2 className="text-[1.15vmax] flex items-center font-extrabold mb-[0.75vmax]">
+                <BiArrowBack
+                  onClick={() => {
+                    setUsername(false);
+                    setGoogleAuthCode(null);
+                    setDisabled(false);
+                  }}
+                  className="cursor-pointer mr-[0.5vmax]"
+                />
+                Create Username
+              </h2>
+              <div className="flex justify-between text-[0.75vmax] font-bold my-[0.5vmax]">
+                <label htmlFor="username">Username</label>
+                {errors.username && touched.username && (
+                  <div className="text-red-500">{errors.username}</div>
+                )}
+              </div>
+              <Field
+                className="w-full bg-transparent text-[0.75vmax] font-medium px-[0.75vmax] py-[0.5vmax] mb-[1.75vmax] border-[0.1vmin] border-solid border-secondary rounded-sm"
+                placeholder="e.g. Crafty"
+                id="username"
+                name="username"
+                validate={validateUsername}
+              />
+              <LoadingButton
+                className="w-full h-[2.5vmax] flex justify-center items-center bg-secondary text-primary rounded-sm text-[0.75vmax] font-bold border-[0.1vmin] border-solid border-secondary"
+                dark
+                loading={isSubmitting}
+                disabled={isSubmitting}
+              >
+                Sign Up
+              </LoadingButton>
+            </Form>
+          )}
+        </Formik>
+      )}
     </>
   );
 };
@@ -248,10 +369,10 @@ const LoginWithEmail: React.FC<LoginWithEmailValues> = ({ setEmail, onAuth, setD
     >
       {({ errors, touched, isSubmitting }) => (
         <Form className="w-full pt-[1vmax]">
-          <h3 className="text-[1.15vmax] flex items-center font-extrabold mb-[0.75vmax]">
-            <BiArrowBack onClick={() => setEmail(false)} className="mr-[0.5vmax]" />
+          <h2 className="text-[1.15vmax] flex items-center font-extrabold mb-[0.75vmax]">
+            <BiArrowBack onClick={() => setEmail(false)} className="cursor-pointer mr-[0.5vmax]" />
             Login
-          </h3>
+          </h2>
           <div className="flex justify-between text-[0.75vmax] font-bold my-[0.5vmax]">
             <label htmlFor="email">Email</label>
             {errors.email && touched.email && <div className="text-red-500">{errors.email}</div>}
@@ -302,10 +423,57 @@ interface LoginHomeValues {
 }
 
 const LoginHome: React.FC<LoginHomeValues> = ({ setEmail, setView, onAuth, setDisabled }) => {
+  const [error, setError] = useState<string | null>(null);
+  const [, loginWithGoogle] = useMutation(LoginWithGoogleDocument);
+
+  const login = useGoogleLogin({
+    onSuccess: async (codeResponse) => {
+      const response = await loginWithGoogle(
+        {},
+        {
+          fetchOptions: {
+            credentials: "include",
+            headers: {
+              Authorization: `Basic ${codeResponse.code}`,
+            },
+          },
+        }
+      );
+      if (response.data?.loginWithGoogle.errors) {
+        setError(response.data.loginWithGoogle.errors[0].message);
+      } else if (response.data?.loginWithGoogle.user && response.data?.loginWithGoogle.auth) {
+        onAuth(response.data.loginWithGoogle);
+        setDisabled(false);
+      }
+    },
+    onError: () => {
+      setError("Something went wrong...");
+      setDisabled(false);
+    },
+    onNonOAuthError: () => {
+      setDisabled(false);
+    },
+    flow: "auth-code",
+  });
+
   return (
     <>
-      <h3 className="w-full text-[1.15vmax] flex items-center font-extrabold my-[1vmax]">Login</h3>
-      <button className="w-full flex items-center justify-center mb-[1vmax] py-[0.5vmax] border-[0.1vmin] border-solid border-secondary rounded-sm text-[0.75vmax] font-bold">
+      <h2 className="w-full text-[1.15vmax] flex items-center justify-between font-extrabold my-[1vmax]">
+        Login
+        {error && (
+          <span className="bg-red-300 text-[0.75vmax] font-bold text-red-500 px-[0.25vmax] rounded-sm">
+            {error}
+          </span>
+        )}
+      </h2>
+      <button
+        onClick={() => {
+          setDisabled(true);
+          setError(null);
+          login();
+        }}
+        className="w-full flex items-center justify-center mb-[1vmax] py-[0.5vmax] border-[0.1vmin] border-solid border-secondary rounded-sm text-[0.75vmax] font-bold"
+      >
         <BsGoogle className="mr-[1vmax]" /> Continue with Google
       </button>
       <div className="w-full pt-[1vmax] border-t-[0.1vmin] border-solid border-secondary">

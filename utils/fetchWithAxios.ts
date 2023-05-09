@@ -37,11 +37,9 @@ export const fetchRefreshToken = async () => {
     if (axios.isAxiosError(error)) {
       const serverError = error as AxiosError<FetchError>;
       if (serverError && serverError.response) {
-        console.log("s");
         return serverError.response.data;
       }
     }
-    console.log("c");
     return { error: "Failed to Refresh Token" };
   }
 };
