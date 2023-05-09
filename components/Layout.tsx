@@ -1,6 +1,5 @@
 import Link from "next/link";
 import Navbar from "./Navbar";
-import "./globals.css";
 import { Inter, Unbounded } from "next/font/google";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -11,10 +10,10 @@ export const metadata = {
   description: "(izzy)",
 };
 
-const RootLayout = ({ children }: { children: React.ReactNode }) => {
+const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <html lang="en">
-      <body
+    <>
+      <div
         className={`${unbounded.variable} ${inter.variable} font-sans bg-primary text-secondary flex flex-col items-center border-x-[0.1vmin] border-solid border-secondary`}
       >
         <Navbar />
@@ -30,9 +29,9 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
         <main className="2xl:w-[60%] xl:w-[70%] lg:w-[80%] md:w-[90%] sm:w-[95%] h-fit min-h-screen">
           {children}
         </main>
-      </body>
-    </html>
+      </div>
+    </>
   );
 };
 
-export default RootLayout;
+export default Layout;

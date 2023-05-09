@@ -20,10 +20,10 @@ const LoadingButton: React.FC<LoadingButtonProps> = ({
     <button {...DetailedHTMLProps} type="submit" disabled={disabled}>
       {loading ? (
         <DominoSpinner
-          size={2.5}
+          size={5}
           color={dark ? "#f2f2f2" : "#151515"}
           loading={loading}
-          sizeUnit="vmin"
+          sizeUnit="vmax"
         />
       ) : (
         <>{children}</>

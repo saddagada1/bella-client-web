@@ -1,14 +1,19 @@
-"use client";
-
 import LoadingButton from "@/components/LoadingButton";
 import { Field, Form, Formik, FormikHelpers, FormikProps } from "formik";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Dispatch, SetStateAction, useRef, useState } from "react";
-import { FiSearch, FiUser, FiShoppingBag } from "react-icons/fi";
+import { FiSearch } from "react-icons/fi";
 import { BiArrowBack } from "react-icons/bi";
 import { BsGoogle } from "react-icons/bs";
 import { MdEmail } from "react-icons/md";
+import { useMutation } from "urql";
+import { AuthResponse, LoginDocument, LogoutDocument, RegisterDocument } from "@/generated/graphql";
+import { trimString } from "@/utils/trimString";
+import { toErrorMap } from "@/utils/toErrorMap";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { resetAuthentication, setAuthentication } from "@/redux/slices/authSlice";
+import { calcExpiresIn } from "@/utils/calc";
 
 interface SignUpValues {
   username: string;
@@ -18,11 +23,14 @@ interface SignUpValues {
 }
 
 interface SignUpWithEmailValues {
+  setDisabled: Dispatch<SetStateAction<boolean>>;
   setEmail: Dispatch<SetStateAction<boolean>>;
+  onAuth: (response: AuthResponse) => void;
 }
 
-const SignUpWithEmail: React.FC<SignUpWithEmailValues> = ({ setEmail }) => {
+const SignUpWithEmail: React.FC<SignUpWithEmailValues> = ({ setEmail, onAuth, setDisabled }) => {
   const signUpFormRef = useRef<FormikProps<SignUpValues> | null>(null);
+  const [, register] = useMutation(RegisterDocument);
 
   const validateUsername = (value: string) => {
     let error;
@@ -72,14 +80,28 @@ const SignUpWithEmail: React.FC<SignUpWithEmailValues> = ({ setEmail }) => {
         password: "",
         confirmPassword: "",
       }}
-      onSubmit={async (values: SignUpValues, { setErrors }: FormikHelpers<SignUpValues>) => {}}
+      onSubmit={async (values: SignUpValues, { setErrors }: FormikHelpers<SignUpValues>) => {
+        setDisabled(true);
+        const request = {
+          registerOptions: {
+            username: values.username,
+            email: trimString(values.email),
+            password: values.password,
+          },
+        };
+        const response = await register(request);
+        if (response.data?.register.errors) {
+          setErrors(toErrorMap(response.data.register.errors));
+        } else if (response.data?.register.auth && response.data?.register.user) {
+          onAuth(response.data.register);
+          setDisabled(false);
+        }
+      }}
     >
       {({ errors, touched, isSubmitting }) => (
         <Form className="w-full pt-[1vmax]">
           <h3 className="text-[1.15vmax] flex items-center font-extrabold mb-[0.75vmax]">
-            <button onClick={() => setEmail(false)} className="mr-[0.5vmax]">
-              <BiArrowBack />
-            </button>
+            <BiArrowBack onClick={() => setEmail(false)} className="mr-[0.5vmax]" />
             Sign Up
           </h3>
           <div className="flex justify-between text-[0.75vmax] font-bold my-[0.5vmax]">
@@ -136,9 +158,11 @@ const SignUpWithEmail: React.FC<SignUpWithEmailValues> = ({ setEmail }) => {
             validate={validateConfirmPassword}
           />
           <LoadingButton
-            className="w-full py-[0.5vmax] bg-secondary text-primary rounded-sm text-[0.75vmax] font-bold border-[0.1vmin] border-solid border-secondary"
+            className="w-full h-[2.5vmax] flex justify-center items-center bg-secondary text-primary rounded-sm text-[0.75vmax] font-bold border-[0.1vmin] border-solid border-secondary"
+            dark
             loading={isSubmitting}
             disabled={isSubmitting}
+            tabIndex={0}
           >
             Sign Up
           </LoadingButton>
@@ -149,11 +173,13 @@ const SignUpWithEmail: React.FC<SignUpWithEmailValues> = ({ setEmail }) => {
 };
 
 interface SignUpHomeValues {
+  setDisabled: Dispatch<SetStateAction<boolean>>;
   setEmail: Dispatch<SetStateAction<boolean>>;
   setView: Dispatch<SetStateAction<string>>;
+  onAuth: (response: AuthResponse) => void;
 }
 
-const SignUpHome: React.FC<SignUpHomeValues> = ({ setEmail, setView }) => {
+const SignUpHome: React.FC<SignUpHomeValues> = ({ setEmail, setView, onAuth, setDisabled }) => {
   return (
     <>
       <h3 className="w-full text-[1.15vmax] flex items-center font-extrabold my-[1vmax]">
@@ -186,11 +212,14 @@ interface LoginValues {
 }
 
 interface LoginWithEmailValues {
+  setDisabled: Dispatch<SetStateAction<boolean>>;
   setEmail: Dispatch<SetStateAction<boolean>>;
-  setView: Dispatch<SetStateAction<string>>;
+  onAuth: (response: AuthResponse) => void;
 }
 
-const LoginWithEmail: React.FC<LoginWithEmailValues> = ({ setEmail, setView }) => {
+const LoginWithEmail: React.FC<LoginWithEmailValues> = ({ setEmail, onAuth, setDisabled }) => {
+  const [, login] = useMutation(LoginDocument);
+
   const validateEmail = (value: string) => {
     let error;
     if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(value)) {
@@ -198,20 +227,29 @@ const LoginWithEmail: React.FC<LoginWithEmailValues> = ({ setEmail, setView }) =
     }
     return error;
   };
+
   return (
     <Formik
       initialValues={{
         email: "",
         password: "",
       }}
-      onSubmit={async (values: LoginValues, { setErrors }: FormikHelpers<LoginValues>) => {}}
+      onSubmit={async (values: LoginValues, { setErrors }: FormikHelpers<LoginValues>) => {
+        setDisabled(true);
+        const request = { loginOptions: values };
+        const response = await login(request);
+        if (response.data?.login.errors) {
+          setErrors(toErrorMap(response.data.login.errors));
+        } else if (response.data?.login.user && response.data?.login.auth) {
+          onAuth(response.data.login);
+          setDisabled(false);
+        }
+      }}
     >
       {({ errors, touched, isSubmitting }) => (
         <Form className="w-full pt-[1vmax]">
           <h3 className="text-[1.15vmax] flex items-center font-extrabold mb-[0.75vmax]">
-            <button onClick={() => setEmail(false)} className="mr-[0.5vmax]">
-              <BiArrowBack />
-            </button>
+            <BiArrowBack onClick={() => setEmail(false)} className="mr-[0.5vmax]" />
             Login
           </h3>
           <div className="flex justify-between text-[0.75vmax] font-bold my-[0.5vmax]">
@@ -243,7 +281,8 @@ const LoginWithEmail: React.FC<LoginWithEmailValues> = ({ setEmail, setView }) =
             Forgotten Password?
           </p>
           <LoadingButton
-            className="w-full py-[0.5vmax] bg-secondary text-primary rounded-sm text-[0.75vmax] font-bold border-[0.1vmin] border-solid border-secondary"
+            className="w-full h-[2.5vmax] flex justify-center items-center bg-secondary text-primary rounded-sm text-[0.75vmax] font-bold border-[0.1vmin] border-solid border-secondary"
+            dark
             loading={isSubmitting}
             disabled={isSubmitting}
           >
@@ -256,11 +295,13 @@ const LoginWithEmail: React.FC<LoginWithEmailValues> = ({ setEmail, setView }) =
 };
 
 interface LoginHomeValues {
+  setDisabled: Dispatch<SetStateAction<boolean>>;
   setEmail: Dispatch<SetStateAction<boolean>>;
   setView: Dispatch<SetStateAction<string>>;
+  onAuth: (response: AuthResponse) => void;
 }
 
-const LoginHome: React.FC<LoginHomeValues> = ({ setEmail, setView }) => {
+const LoginHome: React.FC<LoginHomeValues> = ({ setEmail, setView, onAuth, setDisabled }) => {
   return (
     <>
       <h3 className="w-full text-[1.15vmax] flex items-center font-extrabold my-[1vmax]">Login</h3>
@@ -289,16 +330,18 @@ interface AuthModalValues {
   setVisible: Dispatch<SetStateAction<boolean>>;
   setView: Dispatch<SetStateAction<string>>;
   view: string;
+  onAuth: (response: AuthResponse) => void;
 }
 
-const AuthModal: React.FC<AuthModalValues> = ({ setVisible, setView, view }) => {
+const AuthModal: React.FC<AuthModalValues> = ({ setVisible, setView, view, onAuth }) => {
   const [loginWithEmail, setLoginWithEmail] = useState(false);
   const [signUpWithEmail, setSignUpWithEmail] = useState(false);
+  const [disabled, setDisabled] = useState(false);
 
   return (
     <div className="w-screen h-screen z-50 fixed flex justify-center items-center">
       <div
-        onClick={() => setVisible(false)}
+        onClick={() => !disabled && setVisible(false)}
         className="w-full h-full absolute bg-secondary opacity-50"
       />
       <div className="w-[20%] p-[1.5vmax] z-10 bg-primary flex flex-col items-center rounded-xl">
@@ -307,14 +350,40 @@ const AuthModal: React.FC<AuthModalValues> = ({ setVisible, setView, view }) => 
         </h1>
         {view === "login" ? (
           loginWithEmail ? (
-            <LoginWithEmail setEmail={setLoginWithEmail} setView={setView} />
+            <LoginWithEmail
+              setDisabled={setDisabled}
+              setEmail={setLoginWithEmail}
+              onAuth={(response) => {
+                onAuth(response);
+              }}
+            />
           ) : (
-            <LoginHome setEmail={setLoginWithEmail} setView={setView} />
+            <LoginHome
+              setDisabled={setDisabled}
+              setEmail={setLoginWithEmail}
+              setView={setView}
+              onAuth={(response) => {
+                onAuth(response);
+              }}
+            />
           )
         ) : signUpWithEmail ? (
-          <SignUpWithEmail setEmail={setSignUpWithEmail} />
+          <SignUpWithEmail
+            setDisabled={setDisabled}
+            setEmail={setSignUpWithEmail}
+            onAuth={(response) => {
+              onAuth(response);
+            }}
+          />
         ) : (
-          <SignUpHome setEmail={setSignUpWithEmail} setView={setView} />
+          <SignUpHome
+            setDisabled={setDisabled}
+            setEmail={setSignUpWithEmail}
+            setView={setView}
+            onAuth={(response) => {
+              onAuth(response);
+            }}
+          />
         )}
       </div>
     </div>
@@ -323,8 +392,13 @@ const AuthModal: React.FC<AuthModalValues> = ({ setVisible, setView, view }) => 
 
 const Navbar: React.FC = () => {
   const path = usePathname();
+  const router = useRouter();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalView, setAuthModalView] = useState("");
+  const dispatch = useAppDispatch();
+  const isAuthenticated = useAppSelector((store) => store.auth.isAuthenticated);
+  const [, logout] = useMutation(LogoutDocument);
+
   return (
     <>
       <nav className="w-full h-[6vmax] fixed z-40 flex flex-col border-b-[0.1vmin] border-solid border-secondary">
@@ -346,42 +420,78 @@ const Navbar: React.FC = () => {
                 placeholder="Search"
                 className="w-full mx-[0.5vmax] bg-transparent leading-none text-[0.75vmax] focus:outline-none"
               />
-              <button className="cursor-pointer py-[0.25vmax] px-[0.75vmax] flex items-center uppercase text-[0.7vmax] font-display bg-secondary text-primary">
+              <button
+                onClick={async () => {
+                  const response = await logout({});
+                  if (response) {
+                    dispatch(resetAuthentication());
+                  }
+                }}
+                className="cursor-pointer py-[0.25vmax] px-[0.75vmax] flex items-center uppercase text-[0.7vmax] font-display bg-secondary text-primary"
+              >
                 Search
               </button>
             </div>
             <div className="flex items-center text-[0.7vmax] font-medium font-display uppercase">
               <Link href={path === "/shop" ? "#" : "/shop"}>Shop</Link>
-              <button
-                onClick={() => {
-                  setShowAuthModal(true);
-                  setAuthModalView("login");
-                }}
-                className="cursor-pointer uppercase ml-[1.25vmax] px-[0.75vmax] py-[0.25vmax] border-[0.1vmin] border-solid border-secondary rounded"
-              >
-                Login
-              </button>
-              <button
-                onClick={() => {
-                  setShowAuthModal(true);
-                  setAuthModalView("signup");
-                }}
-                className="cursor-pointer uppercase ml-[1vmax] px-[0.75vmax] py-[0.25vmax] border-[0.1vmin] border-solid border-secondary rounded bg-secondary text-primary"
-              >
-                Sign Up
-              </button>
-              {/* <Link href={path === "/profile" ? "#" : "/profile"}>
-      <FiUser className="text-[0.9vmax]" />
-    </Link>
-    <Link className="ml-[1vmax]" href={path === "/bag" ? "#" : "/bag"}>
-      <FiShoppingBag className="text-[0.9vmax]" />
-    </Link> */}
+              {!isAuthenticated ? (
+                <>
+                  <button
+                    onClick={() => {
+                      setShowAuthModal(true);
+                      setAuthModalView("login");
+                    }}
+                    className="uppercase ml-[1.25vmax] px-[0.75vmax] py-[0.25vmax] border-[0.1vmin] border-solid border-secondary rounded"
+                  >
+                    Login
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowAuthModal(true);
+                      setAuthModalView("signup");
+                    }}
+                    className="uppercase ml-[1vmax] px-[0.75vmax] py-[0.25vmax] border-[0.1vmin] border-solid border-secondary rounded bg-secondary text-primary"
+                  >
+                    Sign Up
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    className="uppercase ml-[1.25vmax] px-[0.75vmax] py-[0.25vmax] border-[0.1vmin] border-solid border-secondary rounded"
+                    href={path === "/profile" ? "#" : "/profile"}
+                  >
+                    Profile
+                  </Link>
+                  <Link
+                    className="uppercase ml-[1vmax] px-[0.75vmax] py-[0.25vmax] border-[0.1vmin] border-solid border-secondary rounded bg-secondary text-primary"
+                    href={path === "/bag" ? "#" : "/bag"}
+                  >
+                    Bag - ( 0 )
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
       </nav>
       {showAuthModal && (
-        <AuthModal setVisible={setShowAuthModal} setView={setAuthModalView} view={authModalView} />
+        <AuthModal
+          setVisible={setShowAuthModal}
+          setView={setAuthModalView}
+          view={authModalView}
+          onAuth={(response) => {
+            dispatch(
+              setAuthentication({
+                isAuthenticated: true,
+                access_token: response!.auth!.access_token,
+                expires_in: calcExpiresIn(response!.auth!.expires_in),
+                user: response!.user!,
+              })
+            );
+            setShowAuthModal(false);
+          }}
+        />
       )}
     </>
   );

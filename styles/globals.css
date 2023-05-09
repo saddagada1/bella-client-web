@@ -7,6 +7,11 @@
   --secondary-colour: #151515;
 }
 
+body {
+  background-color: var(--primary-colour);
+  color: var(--secondary-colour);
+}
+
 *::selection {
   background-color: var(--secondary-colour);
   color: var(--primary-colour);

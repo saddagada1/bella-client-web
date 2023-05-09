@@ -1,9 +1,13 @@
+import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 
 const Home = () => {
   return (
     <>
+      <Head>
+        <title>Bella</title>
+      </Head>
       <div className="w-full h-[55vh] flex row gap-[1vmax] text-primary mt-[2vmax]">
         <div className="w-1/2 relative rounded-xl overflow-hidden">
           <Image src="/hero1.jpeg" alt="hero-1" fill style={{ objectFit: "cover" }} />
