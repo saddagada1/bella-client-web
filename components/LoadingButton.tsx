@@ -20,7 +20,7 @@ const LoadingButton: React.FC<LoadingButtonProps> = ({
     <button {...DetailedHTMLProps} type="submit" disabled={disabled}>
       {loading ? (
         <DominoSpinner
-          size={4}
+          size={8}
           color={dark ? "#f2f2f2" : "#151515"}
           loading={loading}
           sizeUnit="vmax"
