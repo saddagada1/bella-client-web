@@ -8,7 +8,7 @@ export interface Country {
   code: string;
 }
 
-export interface Brand {
+export interface Designer {
   id: number;
   name: string;
   slug: string;
@@ -17,4 +17,9 @@ export interface Brand {
 export interface Condition {
   name: string;
   description: string;
+}
+
+export interface Colour {
+  name: string;
+  code: string;
 }

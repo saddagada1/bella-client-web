@@ -2,8 +2,9 @@ import { AuthResponse, RegisterDocument, RegisterWithGoogleDocument, LoginDocume
 import { toErrorMap } from "@/utils/toErrorMap";
 import { trimString } from "@/utils/trimString";
 import { useGoogleLogin } from "@react-oauth/google";
-import { FormikProps, Formik, FormikHelpers, Form, Field } from "formik";
-import { Dispatch, SetStateAction, useRef, useState } from "react";
+import { Formik, FormikHelpers, Form, Field } from "formik";
+import * as yup from "yup";
+import { Dispatch, SetStateAction, useState } from "react";
 import { BiArrowBack } from "react-icons/bi";
 import { BsGoogle } from "react-icons/bs";
 import { MdEmail } from "react-icons/md";
@@ -24,58 +25,27 @@ interface SignUpWithEmailProps {
 }
 
 const SignUpWithEmail: React.FC<SignUpWithEmailProps> = ({ setEmail, onAuth, setDisabled }) => {
-  const signUpFormRef = useRef<FormikProps<SignUpValues> | null>(null);
   const [, register] = useMutation(RegisterDocument);
-
-  const validateUsername = (value: string) => {
-    let error;
-    if (!value) {
-      error = "Required";
-    } else if (value.length < 5) {
-      error = "Min 5 Chars Required";
-    }
-    return error;
-  };
-
-  const validateEmail = (value: string) => {
-    let error;
-    if (!value) {
-      error = "Required";
-    } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(value)) {
-      error = "Invalid Email Format";
-    }
-    return error;
-  };
-
-  const validatePassword = (value: string) => {
-    let error;
-    if (!value) {
-      error = "Required";
-    } else if (value.length < 8) {
-      error = "Min 8 Chars Required";
-    }
-    return error;
-  };
-
-  const validateConfirmPassword = (value: string) => {
-    let error;
-    if (!value) {
-      error = "Required";
-    } else if (signUpFormRef.current && signUpFormRef.current["values"]["password"] !== value) {
-      error = "Does not Match";
-    }
-    return error;
-  };
 
   return (
     <Formik
-      innerRef={signUpFormRef}
       initialValues={{
         username: "",
         email: "",
         password: "",
         confirmPassword: "",
       }}
+      validationSchema={yup.object().shape({
+        email: yup.string().email("Invalid Format").required("Required"),
+        username: yup
+          .string()
+          .min(5, "Min 5 Chars Required")
+          .matches(/^[A-Za-z0-9_-]*$/, "Only: [ A-Z, 0-9, -, _ ]")
+          .max(20, "Max 20 Chars")
+          .required("Required"),
+        password: yup.string().min(8, "Min 8 Chars Required").required("Required"),
+        confirmPassword: yup.string().oneOf([yup.ref("password"), undefined], "Does Not Match"),
+      })}
       onSubmit={async (values: SignUpValues, { setErrors }: FormikHelpers<SignUpValues>) => {
         setDisabled(true);
         const request = {
@@ -96,7 +66,7 @@ const SignUpWithEmail: React.FC<SignUpWithEmailProps> = ({ setEmail, onAuth, set
     >
       {({ errors, touched, isSubmitting }) => (
         <Form className="w-full pt-4">
-          <h2 className="text-lg flex items-center font-bold mb-4">
+          <h2 className="text-lg flex items-center font-bold font-display uppercase mb-4">
             <BiArrowBack onClick={() => setEmail(false)} className="cursor-pointer text-xl mr-2 flex-shrink-0" />
             Sign Up
           </h2>
@@ -109,7 +79,6 @@ const SignUpWithEmail: React.FC<SignUpWithEmailProps> = ({ setEmail, onAuth, set
             placeholder="e.g. Crafty"
             id="username"
             name="username"
-            validate={validateUsername}
           />
           <div className="flex justify-between text-sm font-semibold mb-2">
             <label htmlFor="email">Email</label>
@@ -121,7 +90,6 @@ const SignUpWithEmail: React.FC<SignUpWithEmailProps> = ({ setEmail, onAuth, set
             name="email"
             placeholder="Bella@acme.ca"
             type="email"
-            validate={validateEmail}
           />
           <div className="flex justify-between text-sm font-semibold mb-2">
             <label htmlFor="password">Password</label>
@@ -133,7 +101,6 @@ const SignUpWithEmail: React.FC<SignUpWithEmailProps> = ({ setEmail, onAuth, set
             id="password"
             name="password"
             type="password"
-            validate={validatePassword}
           />
           <div className="flex justify-between text-sm font-semibold mb-2">
             <label htmlFor="confirm password">Confirm Password</label>
@@ -145,10 +112,9 @@ const SignUpWithEmail: React.FC<SignUpWithEmailProps> = ({ setEmail, onAuth, set
             id="confirmPassword"
             name="confirmPassword"
             type="password"
-            validate={validateConfirmPassword}
           />
           <LoadingButton
-            className="w-full h-12 flex justify-center items-center bg-secondary text-primary rounded text-sm font-bold border border-solid border-secondary"
+            className="w-full h-12 flex justify-center items-center bg-secondary text-primary rounded text-sm font-bold font-display uppercase border border-solid border-secondary"
             dark
             loading={isSubmitting}
             disabled={isSubmitting}
@@ -189,24 +155,16 @@ const SignUpHome: React.FC<SignUpHomeProps> = ({ setEmail, setView, onAuth, setD
     flow: "auth-code",
   });
 
-  const validateUsername = (value: string) => {
-    let error;
-    if (!value) {
-      error = "Required";
-    } else if (value.length < 5) {
-      error = "Min 5 Chars Required";
-    }
-    return error;
-  };
-
   return (
     <>
       {!username && !googleAuthCode ? (
         <>
-          <h2 className="w-full text-lg flex items-center justify-between font-bold my-4">
+          <h2 className="w-full text-lg flex items-center justify-between font-bold font-display uppercase my-4">
             Sign Up
             {error && (
-              <span className="bg-red-100 text-xs font-medium text-red-500 border border-solid border-red-500 px-2 py-0.5 rounded">{error}</span>
+              <span className="bg-red-100 text-xs font-medium font-sans normal-case text-red-500 border border-solid border-red-500 px-2 py-0.5 rounded">
+                {error}
+              </span>
             )}
           </h2>
           <button
@@ -236,6 +194,14 @@ const SignUpHome: React.FC<SignUpHomeProps> = ({ setEmail, setView, onAuth, setD
           initialValues={{
             username: "",
           }}
+          validationSchema={yup.object().shape({
+            username: yup
+              .string()
+              .min(5, "Min 5 Chars Required")
+              .matches(/^[A-Za-z0-9_]*$/, "Only: [ A-Z, 0-9, -, _ ]")
+              .max(20, "Max 20 Chars")
+              .required("Required"),
+          })}
           onSubmit={async (values: { username: string }, { setErrors }: FormikHelpers<{ username: string }>) => {
             setDisabled(true);
             const response = await registerWithGoogle(values, {
@@ -256,7 +222,7 @@ const SignUpHome: React.FC<SignUpHomeProps> = ({ setEmail, setView, onAuth, setD
         >
           {({ errors, touched, isSubmitting }) => (
             <Form className="w-full pt-4">
-              <h2 className="text-lg flex items-center font-bold mb-4">
+              <h2 className="text-lg flex items-center font-bold font-display uppercase mb-4">
                 <BiArrowBack
                   onClick={() => {
                     setUsername(false);
@@ -276,10 +242,9 @@ const SignUpHome: React.FC<SignUpHomeProps> = ({ setEmail, setView, onAuth, setD
                 placeholder="e.g. Crafty"
                 id="username"
                 name="username"
-                validate={validateUsername}
               />
               <LoadingButton
-                className="w-full h-12 flex justify-center items-center bg-secondary text-primary rounded text-sm font-bold border border-solid border-secondary"
+                className="w-full h-12 flex justify-center items-center bg-secondary text-primary rounded text-sm font-bold font-display uppercase border border-solid border-secondary"
                 dark
                 loading={isSubmitting}
                 disabled={isSubmitting}
@@ -308,23 +273,20 @@ interface LoginWithEmailProps {
 const LoginWithEmail: React.FC<LoginWithEmailProps> = ({ setEmail, onAuth, setDisabled }) => {
   const [, login] = useMutation(LoginDocument);
 
-  const validateEmail = (value: string) => {
-    let error;
-    if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(value)) {
-      error = "Invalid Email Format";
-    }
-    return error;
-  };
-
   return (
     <Formik
       initialValues={{
         email: "",
         password: "",
       }}
+      validationSchema={yup.object().shape({
+        email: yup.string().email("Invalid Format").required("Required"),
+      })}
       onSubmit={async (values: LoginValues, { setErrors }: FormikHelpers<LoginValues>) => {
         setDisabled(true);
-        const request = { loginOptions: values };
+        const request = {
+          loginOptions: { email: trimString(values.email), password: values.password },
+        };
         const response = await login(request);
         if (response.data?.login.errors) {
           setErrors(toErrorMap(response.data.login.errors));
@@ -336,7 +298,7 @@ const LoginWithEmail: React.FC<LoginWithEmailProps> = ({ setEmail, onAuth, setDi
     >
       {({ errors, touched, isSubmitting }) => (
         <Form className="w-full pt-4">
-          <h2 className="text-lg flex items-center font-bold mb-4">
+          <h2 className="text-lg flex items-center font-bold font-display uppercase mb-4">
             <BiArrowBack onClick={() => setEmail(false)} className="cursor-pointer text-xl mr-2 flex-shrink-0" />
             Login
           </h2>
@@ -350,7 +312,6 @@ const LoginWithEmail: React.FC<LoginWithEmailProps> = ({ setEmail, onAuth, setDi
             name="email"
             placeholder="Bella@acme.ca"
             type="email"
-            validate={validateEmail}
           />
           <div className="flex justify-between text-sm font-semibold mb-2">
             <label htmlFor="password">Password</label>
@@ -365,7 +326,7 @@ const LoginWithEmail: React.FC<LoginWithEmailProps> = ({ setEmail, onAuth, setDi
           />
           <p className="w-full text-right mb-6 text-xs underline font-medium">Forgotten Password?</p>
           <LoadingButton
-            className="w-full h-12 flex justify-center items-center bg-secondary text-primary rounded text-sm font-bold border border-solid border-secondary"
+            className="w-full h-12 flex justify-center items-center bg-secondary text-primary rounded text-sm font-bold font-display uppercase border border-solid border-secondary"
             dark
             loading={isSubmitting}
             disabled={isSubmitting}
@@ -421,9 +382,13 @@ const LoginHome: React.FC<LoginHomeProps> = ({ setEmail, setView, onAuth, setDis
 
   return (
     <>
-      <h2 className="w-full text-lg flex items-center justify-between font-bold my-4">
+      <h2 className="w-full text-lg flex items-center justify-between font-bold uppercase font-display my-4">
         Login
-        {error && <span className="bg-red-100 text-xs font-medium text-red-500 border border-solid border-red-500 px-2 py-0.5 rounded">{error}</span>}
+        {error && (
+          <span className="bg-red-100 text-xs font-medium font-sans normal-case text-red-500 border border-solid border-red-500 px-2 py-0.5 rounded">
+            {error}
+          </span>
+        )}
       </h2>
       <button
         onClick={() => {
@@ -466,7 +431,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ setVisible, setView, view, onAuth
     <div className="w-screen h-screen z-50 fixed flex justify-center items-center">
       <div onClick={() => !disabled && setVisible(false)} className="w-full h-full absolute bg-secondary opacity-50" />
       <div className="w-11/12 sm:w-10/12 p-6 z-10 bg-primary flex flex-col items-center rounded-xl">
-        <h1 className="w-full text-center text-2xl pb-4 border-b border-solid border-gray-300 font-display font-black uppercase">Welcome!</h1>
+        <h1 className="w-full text-center text-2xl pb-4 border-b border-solid border-gray-300 font-display font-black uppercase">Welcome</h1>
         {view === "login" ? (
           loginWithEmail ? (
             <LoginWithEmail

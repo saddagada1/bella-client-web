@@ -45,7 +45,7 @@ const SideMenu: React.FC<SideMenuProps> = ({ setVisible, showAuth, authView }) =
               <FiUser className="text-2xl sm:text-3xl" />
               <span className="ml-2 text-md sm:ml-4 sm:text-lg uppercase font-bold">Profile</span>
             </Link>
-            <Link className="flex items-center py-4" href="/profile">
+            <Link onClick={() => setVisible(false)} className="flex items-center py-4" href="/create">
               <FiHome className="text-2xl sm:text-3xl" /> <span className="ml-2 text-md sm:ml-4 sm:text-lg uppercase font-bold">Store</span>
             </Link>
             <Link className="flex items-center py-4" href="/profile">
@@ -81,6 +81,9 @@ const SideMenu: React.FC<SideMenuProps> = ({ setVisible, showAuth, authView }) =
         )}
         <h2 className="mx-6 py-6 font-bold text-xl uppercase border-t border-solid border-gray-300">Browse Inventory</h2>
         <Link className="mx-6 py-4 flex justify-between items-center font-medium text-md border-b border-solid border-gray-300" href="/profile">
+          Designers <FiArrowRight className="text-2xl" />
+        </Link>
+        <Link className="mx-6 py-4 flex justify-between items-center font-medium text-md border-b border-solid border-gray-300" href="/profile">
           Menswear <FiArrowRight className="text-2xl" />
         </Link>
         <Link className="mx-6 py-4 flex justify-between items-center font-medium text-md border-b border-solid border-gray-300" href="/profile">
@@ -92,11 +95,8 @@ const SideMenu: React.FC<SideMenuProps> = ({ setVisible, showAuth, authView }) =
         <Link className="mx-6 py-4 flex justify-between items-center font-medium text-md border-b border-solid border-gray-300" href="/profile">
           Accessories <FiArrowRight className="text-2xl" />
         </Link>
-        <Link className="mx-6 py-4 flex justify-between items-center font-medium text-md border-b border-solid border-gray-300" href="/profile">
-          Jewelry <FiArrowRight className="text-2xl" />
-        </Link>
         <Link className="mx-6 py-4 mb-10 flex justify-between items-center font-medium text-md border-b border-solid border-gray-300" href="/profile">
-          Brands <FiArrowRight className="text-2xl" />
+          Jewelry <FiArrowRight className="text-2xl" />
         </Link>
         <Link className="ml-6 mb-6 text-sm uppercase" href="/profile">
           Help
@@ -137,7 +137,7 @@ const Navbar: React.FC = () => {
   return (
     <>
       <nav className="w-full h-[7.5rem] fixed z-40 flex-shrink-0 flex flex-col justify-center items-center bg-primary">
-        <div className="w-full h-16 px-4 flex justify-between items-center border-b border-solid border-secondary">
+        <div className="w-full h-16 px-4 flex justify-between items-center">
           <div className="flex items-center">
             <button onClick={() => setShowSideMenu(true)} className="text-3xl mr-4">
               <GrMenu />
@@ -194,7 +194,7 @@ const Navbar: React.FC = () => {
             )}
           </div>
         </div>
-        <div className="w-full h-14 p-2 flex items-center justify-center border-b border-solid border-secondary">
+        <div className="w-full h-14 bg-secondary p-2 flex items-center justify-center">
           <div className="w-full hidden justify-between text-md font-bold uppercase">
             <Link href="/profile">Trending</Link>
             <Link href="/profile">Menswear</Link>
@@ -202,9 +202,9 @@ const Navbar: React.FC = () => {
             <Link href="/profile">Sneakers</Link>
             <Link href="/profile">Accessorires</Link>
           </div>
-          <div className="w-full h-full flex justify-between items-center text-md font-medium border border-solid border-secondary rounded relative">
-            <FiSearch className="text-lg ml-2 flex-shrink-0" />
-            <input type="text" placeholder="Search" className="w-full mx-3 bg-transparent focus:outline-none" />
+          <div className="w-full h-full flex justify-between bg-primary items-center text-md font-medium rounded">
+            <FiSearch className="text-lg ml-3 flex-shrink-0 text-gray-400" />
+            <input type="text" placeholder="Search for items, designers or styles..." className="w-full mx-3 bg-transparent focus:outline-none" />
           </div>
         </div>
       </nav>
