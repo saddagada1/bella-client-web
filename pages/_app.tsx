@@ -1,4 +1,4 @@
-import Layout from "@/components/Layout";
+import Layout from "@/components/Layout/Layout";
 import { store } from "@/redux/store";
 import "@/styles/globals.css";
 import { createUrqlClient, urqlSsrCache } from "@/utils/createUrqlClient";

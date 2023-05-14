@@ -1,4 +1,4 @@
-import Navbar from "./Navbar";
+import Navbar from "../Navbar/Navbar";
 import { Inter, Unbounded } from "next/font/google";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -12,9 +12,7 @@ export const metadata = {
 const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
-      <div
-        className={`${unbounded.variable} ${inter.variable} font-sans flex flex-col items-center`}
-      >
+      <div className={`${unbounded.variable} ${inter.variable} font-sans flex flex-col items-center`}>
         <Navbar />
         <main className="w-full h-fit min-h-screen mt-[7.5rem] flex-shrink-0">{children}</main>
       </div>

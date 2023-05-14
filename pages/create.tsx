@@ -1,4 +1,4 @@
-import LoadingButton from "@/components/LoadingButton";
+import LoadingButton from "@/components/Utils/LoadingButton";
 import { toErrorMap } from "@/utils/toErrorMap";
 import { trimString } from "@/utils/trimString";
 import { Formik, FormikHelpers, Form, Field } from "formik";
@@ -9,27 +9,7 @@ import type { GetStaticProps, NextPage, InferGetStaticPropsType } from "next";
 import Head from "next/head";
 import Image from "next/image";
 import clsx from "clsx";
-
-interface Department {
-  name: string;
-  categories: { name: string; subcategories: string[]; sizes?: string[] }[];
-}
-
-interface Country {
-  name: string;
-  code: string;
-}
-
-interface Brand {
-  id: number;
-  name: string;
-  slug: string;
-}
-
-interface Condition {
-  name: string;
-  description: string;
-}
+import { Department, Country, Brand, Condition } from "@/utils/types";
 
 export const getStaticProps: GetStaticProps<{
   departments: Department[];
@@ -40,7 +20,7 @@ export const getStaticProps: GetStaticProps<{
   colours: string[];
   sources: string[];
   styles: string[];
-}> = async ({ params }) => {
+}> = async () => {
   const agesResponse = await fs.readFile(path.resolve(process.cwd(), "./public/data/ages.json"), "utf-8");
   const brandsResponse = await fs.readFile(path.resolve(process.cwd(), "./public/data/brands.json"), "utf-8");
   const coloursResponse = await fs.readFile(path.resolve(process.cwd(), "./public/data/colours.json"), "utf-8");
@@ -133,7 +113,7 @@ const Create: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
           onSubmit={async (values: CreateValues, { setErrors }: FormikHelpers<CreateValues>) => {}}
         >
           {({ errors, touched, values, setFieldValue, isSubmitting }) => (
-            <Form className="w-full pt-10 px-4">
+            <Form className="w-full pt-10 pb-40 px-4">
               <h1 className="text-2xl font-black font-display uppercase pb-6 mb-10 border-b border-solid border-secondary">New Product</h1>
               <h2 className="text-lg font-bold font-display uppercase pb-4 mb-4 border-b border-solid border-secondary">General</h2>
               <div className="flex justify-between text-md font-semibold mb-2">
@@ -367,7 +347,7 @@ const Create: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
                 options={countries.map((country) => ({ value: country.name, label: country.name }))}
               />
               <h2 className="text-lg font-bold font-display uppercase mt-9 pb-4 mb-4 border-b border-solid border-secondary">Pricing</h2>
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
                 <div className="w-1/2">
                   <div className="flex justify-between text-md font-semibold mb-2">
                     <label htmlFor="shipping">Shipping</label>
@@ -397,7 +377,7 @@ const Create: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
               </div>
               <div className="border-t border-solid border-secondary fixed bottom-0 left-0 w-full bg-primary px-4">
                 <LoadingButton
-                  className="w-full h-14 mt-6 mb-10 flex justify-center items-center bg-secondary text-primary rounded text-md font-bold border border-solid border-secondary"
+                  className="w-full h-14 mt-6 mb-12 flex justify-center items-center bg-secondary text-primary rounded text-md font-bold border border-solid border-secondary"
                   dark
                   loading={isSubmitting}
                   disabled={isSubmitting}
