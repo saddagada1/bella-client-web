@@ -2,6 +2,7 @@ import LoadingButton from "@/components/Utils/LoadingButton";
 import { toErrorMap } from "@/utils/toErrorMap";
 import { trimString } from "@/utils/trimString";
 import { Formik, FormikHelpers, Form, Field } from "formik";
+import { FiCheck } from "react-icons/fi";
 import * as yup from "yup";
 import Select, { components } from "react-select";
 import { promises as fs } from "fs";
@@ -97,8 +98,11 @@ interface CreateValues {
   era: string | null;
   style: string | null;
   country: string;
-  price: number;
-  shipping_price: number;
+  offer_free_shipping: boolean;
+  shipping_price: string;
+  offer_global_shipping: boolean;
+  global_shipping_price: string;
+  price: string;
 }
 
 const Create: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
@@ -111,24 +115,6 @@ const Create: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
   sources,
   styles,
 }) => {
-  const validateRequired = (value: string) => {
-    let error;
-    if (!value) {
-      error = "Required";
-    }
-    return error;
-  };
-
-  const validateDescription = (value: string) => {
-    let error;
-    if (!value) {
-      error = "Required";
-    } else if (value.length >= 1000) {
-      error = "Max 1000 Chars";
-    }
-    return error;
-  };
-
   return (
     <>
       <Head>
@@ -152,8 +138,11 @@ const Create: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
               era: null,
               style: null,
               country: "",
-              price: 0.0,
-              shipping_price: 0.0,
+              offer_free_shipping: false,
+              shipping_price: "",
+              offer_global_shipping: false,
+              global_shipping_price: "",
+              price: "",
             } as CreateValues
           }
           validationSchema={yup.object().shape({
@@ -173,13 +162,24 @@ const Create: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
               otherwise: () => yup.string().nullable(),
             }),
             country: yup.string().required("Required"),
+            shipping_price: yup.string().when("offer_free_shipping", {
+              is: (offer_free_shipping: boolean) => !offer_free_shipping,
+              then: () => yup.string().required("Required"),
+              otherwise: () => yup.string(),
+            }),
+            global_shipping_price: yup.string().when("offer_global_shipping", {
+              is: (offer_global_shipping: boolean) => offer_global_shipping,
+              then: () => yup.string().required("Required"),
+              otherwise: () => yup.string(),
+            }),
+            price: yup.string().required("Required"),
           })}
           onSubmit={async (values: CreateValues, { setErrors }: FormikHelpers<CreateValues>) => {
             alert("submit");
           }}
         >
           {({ errors, touched, values, setFieldValue, isSubmitting }) => (
-            <Form className="w-full pt-10 px-4">
+            <Form className="w-full pt-10 sm:pb-28 px-4">
               <h1 className="text-2xl font-black font-display uppercase pb-6 border-b border-solid border-gray-300">New Product</h1>
               <h2 className="text-lg font-bold font-display uppercase mt-9 pb-4 mb-4 border-b border-solid border-gray-300">General</h2>
               <div className="flex justify-between text-md font-semibold mb-2">
@@ -187,23 +187,21 @@ const Create: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
                 {errors.title && touched.title && <div className="text-red-500">{errors.title}</div>}
               </div>
               <Field
-                className="w-full bg-transparent text-md font-medium p-3 mb-4 border border-solid border-secondary rounded"
+                className="w-full bg-transparent text-md font-medium p-3 mb-4 border border-solid border-secondary rounded focus:outline-none"
                 placeholder="e.g. green Nike hoodie"
                 id="title"
                 name="title"
-                validate={validateRequired}
               />
               <div className="flex justify-between text-md font-semibold mb-2">
                 <label htmlFor="description">Description</label>
                 {errors.description && touched.description && <div className="text-red-500">{errors.description}</div>}
               </div>
               <Field
-                className="w-full h-24 bg-transparent text-md font-medium p-3 border border-solid border-secondary rounded resize-none"
+                className="w-full h-24 bg-transparent text-md font-medium p-3 border border-solid border-secondary rounded resize-none focus:outline-none"
                 placeholder="e.g. only worn a few times"
                 id="description"
                 name="description"
                 as="textarea"
-                validate={validateDescription}
               />
               <p className="w-full text-right text-sm text-gray-500 mb-4">
                 {values.description ? 1000 - values.description.length : 1000} Chars Left
@@ -585,36 +583,101 @@ const Create: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
                 }}
                 options={countries.map((country) => ({ value: country.name, label: country.name }))}
               />
-              <h2 className="text-lg font-bold font-display uppercase mt-9 pb-4 mb-4 border-b border-solid border-gray-300">Pricing</h2>
-              <div className="flex flex-col gap-2">
-                <div className="w-1/2">
-                  <div className="flex justify-between text-md font-semibold mb-2">
+              <h2 className="text-lg font-bold font-display uppercase mt-9 pb-4 mb-4 border-b border-solid border-gray-300">Shipping</h2>
+              <div className="sm:w-2/3 flex items-center text-md font-semibold mb-6">
+                <div
+                  onClick={() => {
+                    setFieldValue("offer_free_shipping", !values.offer_free_shipping);
+                    setFieldValue("shipping_price", "");
+                  }}
+                  className={`w-5 aspect-square mr-4 flex justify-center items-center border border-solid border-secondary rounded ${
+                    values.offer_free_shipping && "bg-secondary"
+                  }`}
+                >
+                  {values.offer_free_shipping && <FiCheck className="text-sm text-primary" />}
+                </div>
+                <label htmlFor="offer_free_shipping">Free Shipping</label>
+              </div>
+              {!values.offer_free_shipping && (
+                <>
+                  <div className="sm:w-2/3 flex justify-between text-md font-semibold mb-2">
                     <label htmlFor="shipping">Shipping</label>
                     {errors.shipping_price && touched.shipping_price && <div className="text-red-500">{errors.shipping_price}</div>}
                   </div>
-                  <Field
-                    className="w-full bg-transparent text-md font-medium p-3 mb-4 border border-solid border-secondary rounded"
-                    placeholder="e.g. 5.00"
-                    id="shipping_price"
-                    name="shipping_price"
-                    validate={validateRequired}
-                  />
-                </div>
-                <div className="w-1/2">
-                  <div className="flex justify-between text-md font-semibold mb-2">
-                    <label htmlFor="price">Price</label>
-                    {errors.price && touched.price && <div className="text-red-500">{errors.price}</div>}
+                  <div className="sm:w-2/3 flex text-md font-medium p-3 mb-10 border border-solid border-secondary rounded">
+                    <span className="font-display mr-1">CA$</span>
+                    <input
+                      className="bg-transparent focus:outline-none"
+                      type="text"
+                      value={values.shipping_price}
+                      onChange={(event) => {
+                        const currencyRegex = /^[1-9]*(\.[0-9]{0,2})?$/;
+                        if (currencyRegex.test(event.currentTarget.value)) {
+                          setFieldValue("shipping_price", event.currentTarget.value);
+                        }
+                      }}
+                    />
                   </div>
-                  <Field
-                    className="w-full bg-transparent text-md font-medium p-3 mb-4 border border-solid border-secondary rounded"
-                    placeholder="e.g. 20.00"
-                    id="price"
-                    name="price"
-                    validate={validateRequired}
-                  />
+                </>
+              )}
+              <div className="sm:w-2/3 flex items-center text-md font-semibold mb-6">
+                <div
+                  onClick={() => {
+                    setFieldValue("offer_global_shipping", !values.offer_global_shipping);
+                    setFieldValue("global_shipping_price", "");
+                  }}
+                  className={`w-5 aspect-square mr-4 flex justify-center items-center border border-solid border-secondary rounded ${
+                    values.offer_global_shipping && "bg-secondary"
+                  }`}
+                >
+                  {values.offer_global_shipping && <FiCheck className="text-sm text-primary" />}
                 </div>
+                <label htmlFor="offer_free_shipping">Global Shipping</label>
               </div>
-              <div className="flex gap-4 text-md font-bold font-display uppercase">
+              {values.offer_global_shipping && (
+                <>
+                  <div className="sm:w-2/3 flex justify-between text-md font-semibold mb-2">
+                    <label htmlFor="global_shipping">Global Shipping</label>
+                    {errors.global_shipping_price && touched.global_shipping_price && (
+                      <div className="text-red-500">{errors.global_shipping_price}</div>
+                    )}
+                  </div>
+                  <div className="sm:w-2/3 flex text-md font-medium p-3 mb-4 border border-solid border-secondary rounded">
+                    <span className="font-display mr-1">CA$</span>
+                    <input
+                      className="bg-transparent focus:outline-none"
+                      type="text"
+                      value={values.global_shipping_price}
+                      onChange={(event) => {
+                        const currencyRegex = /^[1-9]*(\.[0-9]{0,2})?$/;
+                        if (currencyRegex.test(event.currentTarget.value)) {
+                          setFieldValue("global_shipping_price", event.currentTarget.value);
+                        }
+                      }}
+                    />
+                  </div>
+                </>
+              )}
+              <h2 className="text-lg font-bold font-display uppercase mt-9 pb-4 mb-4 border-b border-solid border-gray-300">Pricing</h2>
+              <div className="sm:w-2/3 flex justify-between text-md font-semibold mb-2">
+                <label htmlFor="price">Price</label>
+                {errors.price && touched.price && <div className="text-red-500">{errors.price}</div>}
+              </div>
+              <div className="sm:w-2/3 flex text-md font-medium p-3 mb-10 border border-solid border-secondary rounded">
+                <span className="font-display mr-1">CA$</span>
+                <input
+                  className="bg-transparent focus:outline-none"
+                  type="text"
+                  value={values.price}
+                  onChange={(event) => {
+                    const currencyRegex = /^[1-9]*(\.[0-9]{0,2})?$/;
+                    if (currencyRegex.test(event.currentTarget.value)) {
+                      setFieldValue("price", event.currentTarget.value);
+                    }
+                  }}
+                />
+              </div>
+              <div className="flex gap-4 text-md font-bold font-display uppercase border-t border-solid border-gray-300 sm:fixed sm:z-50 sm:w-full sm:px-4 sm:bottom-0 sm:left-0 sm:bg-primary">
                 <div className="w-full h-14 mt-6 mb-12 flex justify-center items-center rounded border border-solid border-secondary">Draft</div>
                 <LoadingButton
                   className="w-full h-14 mt-6 mb-12 flex justify-center items-center bg-secondary text-primary uppercase rounded border border-solid border-secondary"
