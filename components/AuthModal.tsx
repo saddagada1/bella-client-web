@@ -102,14 +102,14 @@ const SignUpWithEmail: React.FC<SignUpWithEmailProps> = ({ setEmail, onAuth, set
     >
       {({ errors, touched, isSubmitting }) => (
         <Form className="w-full pt-4">
-          <h2 className="text-lg flex items-center font-extrabold mb-4">
+          <h2 className="text-lg flex items-center font-bold mb-4">
             <BiArrowBack
               onClick={() => setEmail(false)}
               className="cursor-pointer text-xl mr-2 flex-shrink-0"
             />
             Sign Up
           </h2>
-          <div className="flex justify-between text-sm font-bold mb-2">
+          <div className="flex justify-between text-sm font-semibold mb-2">
             <label htmlFor="username">Username</label>
             {errors.username && touched.username && (
               <div className="text-red-500">{errors.username}</div>
@@ -122,7 +122,7 @@ const SignUpWithEmail: React.FC<SignUpWithEmailProps> = ({ setEmail, onAuth, set
             name="username"
             validate={validateUsername}
           />
-          <div className="flex justify-between text-sm font-bold mb-2">
+          <div className="flex justify-between text-sm font-semibold mb-2">
             <label htmlFor="email">Email</label>
             {errors.email && touched.email && <div className="text-red-500">{errors.email}</div>}
           </div>
@@ -134,7 +134,7 @@ const SignUpWithEmail: React.FC<SignUpWithEmailProps> = ({ setEmail, onAuth, set
             type="email"
             validate={validateEmail}
           />
-          <div className="flex justify-between text-sm font-bold mb-2">
+          <div className="flex justify-between text-sm font-semibold mb-2">
             <label htmlFor="password">Password</label>
             {errors.password && touched.password && (
               <div className="text-red-500">{errors.password}</div>
@@ -148,7 +148,7 @@ const SignUpWithEmail: React.FC<SignUpWithEmailProps> = ({ setEmail, onAuth, set
             type="password"
             validate={validatePassword}
           />
-          <div className="flex justify-between text-sm font-bold mb-2">
+          <div className="flex justify-between text-sm font-semibold mb-2">
             <label htmlFor="confirm password">Confirm Password</label>
             {errors.confirmPassword && touched.confirmPassword && (
               <div className="text-red-500">{errors.confirmPassword}</div>
@@ -218,10 +218,10 @@ const SignUpHome: React.FC<SignUpHomeProps> = ({ setEmail, setView, onAuth, setD
     <>
       {!username && !googleAuthCode ? (
         <>
-          <h2 className="w-full text-lg flex items-center justify-between font-extrabold my-4">
+          <h2 className="w-full text-lg flex items-center justify-between font-bold my-4">
             Sign Up
             {error && (
-              <span className="bg-red-300 text-xs font-bold text-red-500 px-2 py-0.5 rounded">
+              <span className="bg-red-100 text-xs font-medium text-red-500 border border-solid border-red-500 px-2 py-0.5 rounded">
                 {error}
               </span>
             )}
@@ -245,7 +245,7 @@ const SignUpHome: React.FC<SignUpHomeProps> = ({ setEmail, setView, onAuth, setD
             </button>
             <button
               onClick={() => setView("login")}
-              className="w-full text-center text-xs underline font-bold"
+              className="w-full text-center text-xs underline font-medium"
             >
               {"Already have an account? Log in."}
             </button>
@@ -282,7 +282,7 @@ const SignUpHome: React.FC<SignUpHomeProps> = ({ setEmail, setView, onAuth, setD
         >
           {({ errors, touched, isSubmitting }) => (
             <Form className="w-full pt-4">
-              <h2 className="text-lg flex items-center font-extrabold mb-4">
+              <h2 className="text-lg flex items-center font-bold mb-4">
                 <BiArrowBack
                   onClick={() => {
                     setUsername(false);
@@ -293,7 +293,7 @@ const SignUpHome: React.FC<SignUpHomeProps> = ({ setEmail, setView, onAuth, setD
                 />
                 Create Username
               </h2>
-              <div className="flex justify-between text-sm font-bold mb-2">
+              <div className="flex justify-between text-sm font-semibold mb-2">
                 <label htmlFor="username">Username</label>
                 {errors.username && touched.username && (
                   <div className="text-red-500">{errors.username}</div>
@@ -364,14 +364,14 @@ const LoginWithEmail: React.FC<LoginWithEmailProps> = ({ setEmail, onAuth, setDi
     >
       {({ errors, touched, isSubmitting }) => (
         <Form className="w-full pt-4">
-          <h2 className="text-lg flex items-center font-extrabold mb-4">
+          <h2 className="text-lg flex items-center font-bold mb-4">
             <BiArrowBack
               onClick={() => setEmail(false)}
               className="cursor-pointer text-xl mr-2 flex-shrink-0"
             />
             Login
           </h2>
-          <div className="flex justify-between text-sm font-bold mb-2">
+          <div className="flex justify-between text-sm font-semibold mb-2">
             <label htmlFor="email">Email</label>
             {errors.email && touched.email && <div className="text-red-500">{errors.email}</div>}
           </div>
@@ -383,7 +383,7 @@ const LoginWithEmail: React.FC<LoginWithEmailProps> = ({ setEmail, onAuth, setDi
             type="email"
             validate={validateEmail}
           />
-          <div className="flex justify-between text-sm font-bold mb-2">
+          <div className="flex justify-between text-sm font-semibold mb-2">
             <label htmlFor="password">Password</label>
             {errors.password && touched.password && (
               <div className="text-red-500">{errors.password}</div>
@@ -396,7 +396,9 @@ const LoginWithEmail: React.FC<LoginWithEmailProps> = ({ setEmail, onAuth, setDi
             name="password"
             type="password"
           />
-          <p className="w-full text-right mb-6 text-xs underline font-bold">Forgotten Password?</p>
+          <p className="w-full text-right mb-6 text-xs underline font-medium">
+            Forgotten Password?
+          </p>
           <LoadingButton
             className="w-full h-11 flex justify-center items-center bg-secondary text-primary rounded text-sm font-bold border border-solid border-secondary"
             dark
@@ -454,10 +456,10 @@ const LoginHome: React.FC<LoginHomeProps> = ({ setEmail, setView, onAuth, setDis
 
   return (
     <>
-      <h2 className="w-full text-lg flex items-center justify-between font-extrabold my-4">
+      <h2 className="w-full text-lg flex items-center justify-between font-bold my-4">
         Login
         {error && (
-          <span className="bg-red-300 text-xs font-bold text-red-500 px-2 py-0.5 rounded">
+          <span className="bg-red-100 text-xs font-medium text-red-500 border border-solid border-red-500 px-2 py-0.5 rounded">
             {error}
           </span>
         )}
@@ -481,7 +483,7 @@ const LoginHome: React.FC<LoginHomeProps> = ({ setEmail, setView, onAuth, setDis
         </button>
         <button
           onClick={() => setView("signup")}
-          className="w-full text-center text-xs underline font-bold"
+          className="w-full text-center text-xs underline font-medium"
         >
           {"Don't have an account? Sign Up."}
         </button>

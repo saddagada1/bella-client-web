@@ -1,0 +1,13 @@
+[
+  { "name": "Brand New", "description": "Unused with Original Packaging or Tags" },
+  { "name": "Like New", "description": "Mint Condition Pre-Owned or New without Tags" },
+  { "name": "Used - Excellent", "description": "Lightly Used but No Noticeable Flaws" },
+  {
+    "name": "Used - Good",
+    "description": "Minor Flaws or Signs of Wear - Should be Noted in Photos or Description"
+  },
+  {
+    "name": "Used - Fair",
+    "description": "Obvious Flaws or Signs of Wear - Should be Noted in Photos or Description"
+  }
+]

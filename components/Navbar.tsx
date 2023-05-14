@@ -1,6 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Dispatch, SetStateAction, useState } from "react";
-import { FiSearch } from "react-icons/fi";
+import { FiSearch, FiMail, FiUser, FiShoppingBag } from "react-icons/fi";
 import { GrMenu } from "react-icons/gr";
 import { useMutation } from "urql";
 import { LogoutDocument } from "@/generated/graphql";
@@ -12,9 +13,15 @@ import { AnimatePresence, motion } from "framer-motion";
 
 interface SideMenuProps {
   setVisible: Dispatch<SetStateAction<boolean>>;
+  showAuth: Dispatch<SetStateAction<boolean>>;
+  authView: Dispatch<SetStateAction<string>>;
 }
 
-const SideMenu: React.FC<SideMenuProps> = ({ setVisible }) => {
+const SideMenu: React.FC<SideMenuProps> = ({ setVisible, showAuth, authView }) => {
+  const auth = useAppSelector((store) => store.auth);
+  const dispatch = useAppDispatch();
+  const [, logout] = useMutation(LogoutDocument);
+
   return (
     <div className="w-screen h-screen z-50 fixed flex">
       <motion.div
@@ -31,14 +38,73 @@ const SideMenu: React.FC<SideMenuProps> = ({ setVisible }) => {
         transition={{ type: "tween", duration: 0.2 }}
         className="w-5/6 h-full z-10 bg-primary shadow-2xl flex flex-col relative overflow-scroll"
       >
+        {auth.isAuthenticated ? (
+          <>
+            <Link
+              className="w-full flex items-center py-6 pl-6 mb-6 font-bold text-xl border-b border-solid border-secondary"
+              href="/profile"
+            >
+              <span className="w-10 aspect-square mr-6 rounded-full overflow-hidden relative">
+                <Image
+                  src="/media/utils/blank-profile.webp"
+                  alt="profile-picture"
+                  fill
+                  className="object-cover"
+                />
+              </span>
+              {auth.user!.username}
+            </Link>
+            <Link className="ml-6 mb-6 text-sm uppercase" href="/profile">
+              Profile
+            </Link>
+            <Link className="ml-6 mb-6 text-sm uppercase" href="/profile">
+              Messages
+            </Link>
+            <Link className="ml-6 mb-6 text-sm uppercase" href="/profile">
+              Favourites
+            </Link>
+            <button
+              onClick={async () => {
+                const response = await logout({});
+                if (response) {
+                  dispatch(resetAuthentication());
+                  setVisible(false);
+                }
+              }}
+              className="ml-6 mb-6 text-sm uppercase w-fit text-red-700"
+            >
+              Sign Out
+            </button>
+          </>
+        ) : (
+          <>
+            <h1 className="font-display font-black text-4xl my-6 ml-6 uppercase">Bella</h1>
+            <div className="flex ml-6 mb-6 text-xl font-display font-medium">
+              <button
+                onClick={() => {
+                  setVisible(false);
+                  showAuth(true);
+                  authView("login");
+                }}
+                className="w-fit uppercase"
+              >
+                Login
+              </button>
+              <button
+                onClick={() => {
+                  setVisible(false);
+                  showAuth(true);
+                  authView("signup");
+                }}
+                className="w-fit ml-6 uppercase"
+              >
+                Sign Up
+              </button>
+            </div>
+          </>
+        )}
         <Link
-          className="w-full py-6 pl-6 font-bold text-xl border-b border-solid border-secondary"
-          href="/profile"
-        >
-          Home
-        </Link>
-        <Link
-          className="w-full py-6 pl-6 font-bold text-xl border-b border-solid border-secondary"
+          className="w-full py-6 pl-6 font-bold text-xl border-y border-solid border-secondary"
           href="/profile"
         >
           Trending
@@ -79,16 +145,16 @@ const SideMenu: React.FC<SideMenuProps> = ({ setVisible }) => {
         >
           Shop
         </Link>
-        <Link className="ml-6 mb-6 text-base uppercase" href="/profile">
+        <Link className="ml-6 mb-6 text-sm uppercase" href="/profile">
           Help
         </Link>
-        <Link className="ml-6 mb-6 text-base uppercase" href="/profile">
+        <Link className="ml-6 mb-6 text-sm uppercase" href="/profile">
           FAQ
         </Link>
-        <Link className="ml-6 mb-10 text-base uppercase" href="/profile">
+        <Link className="ml-6 mb-10 text-sm uppercase" href="/profile">
           About
         </Link>
-        <p className="ml-6 mb-6 text-sm uppercase">Bella &copy; 2023</p>
+        <p className="ml-6 mb-6 text-xs uppercase">Bella &copy; 2023</p>
       </motion.div>
     </div>
   );
@@ -100,7 +166,6 @@ const Navbar: React.FC = () => {
   const [showSideMenu, setShowSideMenu] = useState(false);
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector((store) => store.auth.isAuthenticated);
-  const [, logout] = useMutation(LogoutDocument);
 
   return (
     <>
@@ -121,15 +186,7 @@ const Navbar: React.FC = () => {
               placeholder="Search"
               className="w-full mx-[0.5vmax] bg-transparent text-[0.75vmax] focus:outline-none"
             />
-            <button
-              onClick={async () => {
-                const response = await logout({});
-                if (response) {
-                  dispatch(resetAuthentication());
-                }
-              }}
-              className="cursor-pointer py-[0.25vmax] px-[0.75vmax] flex items-center uppercase text-[0.7vmax] font-display bg-secondary text-primary"
-            >
+            <button className="cursor-pointer py-[0.25vmax] px-[0.75vmax] flex items-center uppercase text-[0.7vmax] font-display bg-secondary text-primary">
               Search
             </button>
           </div>
@@ -160,17 +217,17 @@ const Navbar: React.FC = () => {
               </>
             ) : (
               <>
-                <Link
-                  className="hidden sm:block uppercase ml-2 py-2 px-3 border border-solid border-secondary rounded"
-                  href="/profile"
-                >
-                  Profile
+                <Link className="hidden sm:block ml-6 text-3xl" href="/messages">
+                  <FiMail />
                 </Link>
-                <Link
-                  className="uppercase ml-2 py-2 px-3 border border-solid border-secondary rounded bg-secondary text-primary"
-                  href="/bag"
-                >
-                  Bag - (99+)
+                <Link className="ml-6 text-3xl" href="/profile">
+                  <FiUser />
+                </Link>
+                <Link className="ml-6 text-3xl relative" href="/bag">
+                  <FiShoppingBag />
+                  <span className="absolute -top-1 -right-1 px-1 pt-0.5 bg-red-500 text-primary text-xs rounded-md">
+                    9+
+                  </span>
                 </Link>
               </>
             )}
@@ -184,7 +241,7 @@ const Navbar: React.FC = () => {
             <Link href="/profile">Sneakers</Link>
             <Link href="/profile">Accessorires</Link>
           </div>
-          <div className="w-full h-full flex justify-between items-center text-sm font-bold border border-solid border-secondary rounded relative">
+          <div className="w-full h-full flex justify-between items-center text-md font-medium border border-solid border-secondary rounded relative">
             <FiSearch className="text-lg ml-2 flex-shrink-0" />
             <input
               type="text"
@@ -212,7 +269,15 @@ const Navbar: React.FC = () => {
           }}
         />
       )}
-      <AnimatePresence>{showSideMenu && <SideMenu setVisible={setShowSideMenu} />}</AnimatePresence>
+      <AnimatePresence>
+        {showSideMenu && (
+          <SideMenu
+            setVisible={setShowSideMenu}
+            showAuth={setShowAuthModal}
+            authView={setAuthModalView}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 };

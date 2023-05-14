@@ -14,7 +14,7 @@ const Home = () => {
           className="h-2/3 bg-secondary rounded-xl p-4 flex items-end relative overflow-hidden"
         >
           <video autoPlay loop className="absolute left-0 bottom-0 w-full h-full object-cover">
-            <source src="/hero.mp4" />
+            <source src="/media/videos/hero.mp4" />
           </video>
           <div className="anim-grain opacity-10 top-0" />
           <h1 className="font-display font-black uppercase text-3xl leading-none z-10">
@@ -24,16 +24,31 @@ const Home = () => {
         </Link>
         <div className="h-1/3 flex gap-2">
           <div className="w-1/2 relative rounded-xl overflow-hidden">
-            <Image src="/hero1.jpeg" alt="hero-1" fill className="object-cover saturate-50" />
+            <Image
+              src="/media/images/hero1.jpeg"
+              alt="hero-1"
+              fill
+              className="object-cover saturate-50"
+            />
             <div className="anim-grain opacity-10" />
           </div>
           <div className="flex-1 flex gap-2">
             <div className="w-1/2 relative rounded-xl overflow-hidden">
-              <Image src="/hero2.jpeg" alt="hero-2" fill className="object-cover saturate-50" />
+              <Image
+                src="/media/images/hero2.jpeg"
+                alt="hero-2"
+                fill
+                className="object-cover saturate-50"
+              />
               <div className="anim-grain opacity-10" />
             </div>
             <div className="w-1/2 relative rounded-xl overflow-hidden">
-              <Image src="/hero3.jpeg" alt="hero-3" fill className="object-cover saturate-50" />
+              <Image
+                src="/media/images/hero3.jpeg"
+                alt="hero-3"
+                fill
+                className="object-cover saturate-50"
+              />
               <div className="anim-grain opacity-10" />
             </div>
           </div>
