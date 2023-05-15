@@ -1,5 +1,5 @@
-mutation LoginWithGoogle {
-  loginWithGoogle {
+query UserByUsername($username: String!) {
+  userByUsername(username: $username) {
     errors {
       field
       message
@@ -16,10 +16,6 @@ mutation LoginWithGoogle {
       country
       created_at
       updated_at
-    }
-    auth {
-      access_token
-      expires_in
     }
   }
 }

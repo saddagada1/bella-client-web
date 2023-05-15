@@ -9,6 +9,11 @@ mutation Register($registerOptions: RegisterInput!) {
       verified
       email
       username
+      token_version
+      first_name
+      last_name
+      bio
+      country
       created_at
       updated_at
     }

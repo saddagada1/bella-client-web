@@ -36,23 +36,23 @@ const SideMenu: React.FC<SideMenuProps> = ({ setVisible, showAuth, authView }) =
         animate={{ translateX: "0%" }}
         exit={{ translateX: "-100%" }}
         transition={{ type: "tween", duration: 0.2 }}
-        className="w-11/12 sm:w-5/6 h-full z-10 bg-primary shadow-2xl flex flex-col relative overflow-scroll"
+        className="w-11/12 sm:w-5/6 h-full z-10 bg-primary shadow-2xl flex flex-col relative overflow-scroll will-change-transform"
       >
         <h1 className="font-display font-black text-4xl my-6 ml-6 uppercase">Bella</h1>
         {isAuthenticated ? (
-          <div className="mx-6 mb-6 grid grid-cols-2 grid-rows-2">
+          <div className="mx-6 mb-6 grid grid-cols-2 grid-rows-2 text-md sm:text-lg uppercase font-medium font-display">
             <Link className="flex items-center py-4" href="/profile">
               <FiUser className="text-2xl sm:text-3xl" />
-              <span className="ml-2 text-md sm:ml-4 sm:text-lg uppercase font-bold">Profile</span>
+              <span className="ml-2 sm:ml-4">User</span>
             </Link>
             <Link onClick={() => setVisible(false)} className="flex items-center py-4" href="/create">
-              <FiHome className="text-2xl sm:text-3xl" /> <span className="ml-2 text-md sm:ml-4 sm:text-lg uppercase font-bold">Store</span>
+              <FiHome className="text-2xl sm:text-3xl" /> <span className="ml-2 sm:ml-4">Store</span>
             </Link>
             <Link className="flex items-center py-4" href="/profile">
-              <FiHeart className="text-2xl sm:text-3xl" /> <span className="ml-2 text-md sm:ml-4 sm:text-lg uppercase font-bold">Likes</span>
+              <FiHeart className="text-2xl sm:text-3xl" /> <span className="ml-2 sm:ml-4">Likes</span>
             </Link>
             <Link className="flex items-center py-4" href="/profile">
-              <FiMail className="text-2xl sm:text-3xl" /> <span className="ml-2 text-md sm:ml-4 sm:text-lg uppercase font-bold">Messages</span>
+              <FiMail className="text-2xl sm:text-3xl" /> <span className="ml-2 sm:ml-4">Mail</span>
             </Link>
           </div>
         ) : (

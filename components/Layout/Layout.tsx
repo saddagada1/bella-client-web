@@ -4,11 +4,6 @@ import { Inter, Unbounded } from "next/font/google";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const unbounded = Unbounded({ subsets: ["latin"], variable: "--font-unbounded" });
 
-export const metadata = {
-  title: "Bella",
-  description: "(izzy)",
-};
-
 const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
