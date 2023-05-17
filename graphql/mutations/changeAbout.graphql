@@ -1,7 +1,8 @@
-query UserByUsername($username: String!) {
-  userByUsername(username: $username) {
+mutation ChangeAbout($changeAboutOptions: ChangeAboutInput!) {
+  changeAbout(changeAboutOptions: $changeAboutOptions) {
     id
     verified
+    oauth_user
     email
     username
     token_version

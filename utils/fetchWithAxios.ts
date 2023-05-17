@@ -27,11 +27,7 @@ interface RefreshTokenResponse {
 
 export const fetchRefreshToken = async () => {
   try {
-    const response = await axios.post<RefreshTokenResponse>(
-      process.env.REFRESH_TOKEN_ENDPOINT!,
-      {},
-      { withCredentials: true }
-    );
+    const response = await axios.post<RefreshTokenResponse>(process.env.REFRESH_TOKEN_ENDPOINT!, {}, { withCredentials: true });
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {

@@ -1,5 +1,5 @@
-mutation RegisterWithGoogle($username: String!) {
-  registerWithGoogle(username: $username) {
+mutation RegisterWithGoogle($registerOptions: RegisterWithGoogleInput!) {
+  registerWithGoogle(registerOptions: $registerOptions) {
     errors {
       field
       message
@@ -7,6 +7,7 @@ mutation RegisterWithGoogle($username: String!) {
     user {
       id
       verified
+      oauth_user
       email
       username
       token_version

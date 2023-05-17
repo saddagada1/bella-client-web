@@ -23,3 +23,14 @@ export interface Colour {
   name: string;
   code: string;
 }
+
+export interface Classifiers {
+  departments: Department[];
+  countries: Country[];
+  designers: Designer[];
+  conditions: Condition[];
+  colours: Colour[];
+  eras: string[];
+  sources: string[];
+  styles: string[];
+}

@@ -1,5 +1,5 @@
-mutation Login($loginOptions: LoginInput!) {
-  login(loginOptions: $loginOptions) {
+mutation VerifyEmail($token: String!) {
+  verifyEmail(token: $token) {
     errors {
       field
       message
@@ -17,10 +17,6 @@ mutation Login($loginOptions: LoginInput!) {
       country
       created_at
       updated_at
-    }
-    auth {
-      access_token
-      expires_in
     }
   }
 }

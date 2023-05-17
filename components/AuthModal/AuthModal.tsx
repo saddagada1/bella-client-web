@@ -12,10 +12,12 @@ import { useMutation } from "urql";
 import LoadingButton from "../Utils/LoadingButton";
 
 interface SignUpValues {
-  username: string;
   email: string;
   password: string;
   confirmPassword: string;
+  username: string;
+  first_name: string;
+  last_name: string;
 }
 
 interface SignUpWithEmailProps {
@@ -25,15 +27,18 @@ interface SignUpWithEmailProps {
 }
 
 const SignUpWithEmail: React.FC<SignUpWithEmailProps> = ({ setEmail, onAuth, setDisabled }) => {
+  const [stepTwo, setStepTwo] = useState(false);
   const [, register] = useMutation(RegisterDocument);
 
   return (
     <Formik
       initialValues={{
-        username: "",
         email: "",
         password: "",
         confirmPassword: "",
+        username: "",
+        first_name: "",
+        last_name: "",
       }}
       validationSchema={yup.object().shape({
         email: yup.string().email("Invalid Format").required("Required"),
@@ -45,14 +50,18 @@ const SignUpWithEmail: React.FC<SignUpWithEmailProps> = ({ setEmail, onAuth, set
           .required("Required"),
         password: yup.string().min(8, "Min 8 Chars Required").required("Required"),
         confirmPassword: yup.string().oneOf([yup.ref("password"), undefined], "Does Not Match"),
+        first_name: yup.string().max(20, "Max 20 Chars").required("Required"),
+        last_name: yup.string().max(20, "Max 20 Chars").required("Required"),
       })}
       onSubmit={async (values: SignUpValues, { setErrors }: FormikHelpers<SignUpValues>) => {
         setDisabled(true);
         const request = {
           registerOptions: {
-            username: values.username.toLowerCase(),
             email: trimString(values.email),
             password: values.password,
+            username: values.username.toLowerCase(),
+            first_name: values.first_name,
+            last_name: values.last_name,
           },
         };
         const response = await register(request);
@@ -60,88 +69,142 @@ const SignUpWithEmail: React.FC<SignUpWithEmailProps> = ({ setEmail, onAuth, set
           setErrors(toErrorMap(response.data.register.errors));
         } else if (response.data?.register.auth && response.data?.register.user) {
           onAuth(response.data.register);
-          setDisabled(false);
         }
+        setDisabled(false);
       }}
     >
       {({ errors, touched, isSubmitting }) => (
         <Form className="w-full">
-          <h2 className="text-2xl flex items-center font-bold font-display uppercase mb-4">
-            <BiArrowBack onClick={() => setEmail(false)} className="cursor-pointer text-3xl mr-4 flex-shrink-0" />
+          <h1 className="text-2xl flex items-center font-bold font-display uppercase pb-2 mb-4 border-b border-solid border-gray-300">
+            <BiArrowBack onClick={() => (stepTwo ? setStepTwo(false) : setEmail(false))} className="cursor-pointer text-3xl mr-4 flex-shrink-0" />
             Sign Up
-          </h2>
-          <div className="flex items-center justify-between text-md font-semibold mb-2">
-            <label htmlFor="username">Username</label>
-            {errors.username && touched.username && (
-              <div className="bg-red-100 text-xs sm:text-sm font-medium text-red-500 border border-solid border-red-500 px-2 py-0.5 rounded">
-                {errors.username}
+          </h1>
+          {!stepTwo ? (
+            <>
+              <div className="flex items-center justify-between text-md font-semibold mb-2">
+                <label htmlFor="email">Email</label>
+                {errors.email && touched.email && (
+                  <div className="bg-red-100 text-xs sm:text-sm font-medium text-red-500 border border-solid border-red-500 px-2 py-0.5 rounded">
+                    {errors.email}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <Field
-            className="w-full bg-transparent text-md font-medium p-2 mb-4 border border-solid border-secondary rounded"
-            placeholder="e.g. Crafty"
-            id="username"
-            name="username"
-          />
-          <div className="flex items-center justify-between text-md font-semibold mb-2">
-            <label htmlFor="email">Email</label>
-            {errors.email && touched.email && (
-              <div className="bg-red-100 text-xs sm:text-sm font-medium text-red-500 border border-solid border-red-500 px-2 py-0.5 rounded">
-                {errors.email}
+              <Field
+                className="w-full bg-transparent text-md font-medium p-2 mb-4 border border-solid border-secondary rounded"
+                id="email"
+                name="email"
+                placeholder="Bella@acme.ca"
+                type="email"
+              />
+              <div className="flex items-center justify-between text-md font-semibold mb-2">
+                <label htmlFor="password">Password</label>
+                {errors.password && touched.password && (
+                  <div className="bg-red-100 text-xs sm:text-sm font-medium text-red-500 border border-solid border-red-500 px-2 py-0.5 rounded">
+                    {errors.password}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <Field
-            className="w-full bg-transparent text-md font-medium p-2 mb-4 border border-solid border-secondary rounded"
-            id="email"
-            name="email"
-            placeholder="Bella@acme.ca"
-            type="email"
-          />
-          <div className="flex items-center justify-between text-md font-semibold mb-2">
-            <label htmlFor="password">Password</label>
-            {errors.password && touched.password && (
-              <div className="bg-red-100 text-xs sm:text-sm font-medium text-red-500 border border-solid border-red-500 px-2 py-0.5 rounded">
-                {errors.password}
+              <Field
+                className="w-full bg-transparent text-md font-medium p-2 mb-4 border border-solid border-secondary rounded"
+                placeholder="Password"
+                id="password"
+                name="password"
+                type="password"
+              />
+              <div className="flex items-center justify-between text-md font-semibold mb-2">
+                <label htmlFor="confirm password">Confirm Password</label>
+                {errors.confirmPassword && touched.confirmPassword && (
+                  <div className="bg-red-100 text-xs sm:text-sm font-medium text-red-500 border border-solid border-red-500 px-2 py-0.5 rounded">
+                    {errors.confirmPassword}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <Field
-            className="w-full bg-transparent text-md font-medium p-2 mb-4 border border-solid border-secondary rounded"
-            placeholder="Password"
-            id="password"
-            name="password"
-            type="password"
-          />
-          <div className="flex items-center justify-between text-md font-semibold mb-2">
-            <label htmlFor="confirm password">Confirm Password</label>
-            {errors.confirmPassword && touched.confirmPassword && (
-              <div className="bg-red-100 text-xs sm:text-sm font-medium text-red-500 border border-solid border-red-500 px-2 py-0.5 rounded">
-                {errors.confirmPassword}
+              <Field
+                className="w-full bg-transparent text-md font-medium p-2 mb-6 border border-solid border-secondary rounded"
+                placeholder="Confirm Password"
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+              />
+            </>
+          ) : (
+            <>
+              <div className="flex items-center justify-between text-md font-semibold mb-2">
+                <label htmlFor="first-name">First Name</label>
+                {errors.first_name && touched.first_name && (
+                  <div className="bg-red-100 text-xs sm:text-sm font-medium text-red-500 border border-solid border-red-500 px-2 py-0.5 rounded">
+                    {errors.first_name}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <Field
-            className="w-full bg-transparent text-md font-medium p-2 mb-6 border border-solid border-secondary rounded"
-            placeholder="Confirm Password"
-            id="confirmPassword"
-            name="confirmPassword"
-            type="password"
-          />
-          <LoadingButton
-            className="w-full h-14 flex justify-center items-center bg-secondary text-primary rounded text-md font-bold font-display uppercase border border-solid border-secondary"
-            dark
-            loading={isSubmitting}
-            disabled={isSubmitting}
-          >
-            Sign Up
-          </LoadingButton>
+              <Field
+                className="w-full bg-transparent text-md font-medium p-2 mb-4 border border-solid border-secondary rounded"
+                id="first_name"
+                name="first_name"
+                placeholder="First Name"
+              />
+              <div className="flex items-center justify-between text-md font-semibold mb-2">
+                <label htmlFor="last-name">Last Name</label>
+                {errors.last_name && touched.last_name && (
+                  <div className="bg-red-100 text-xs sm:text-sm font-medium text-red-500 border border-solid border-red-500 px-2 py-0.5 rounded">
+                    {errors.last_name}
+                  </div>
+                )}
+              </div>
+              <Field
+                className="w-full bg-transparent text-md font-medium p-2 mb-4 border border-solid border-secondary rounded"
+                id="last_name"
+                name="last_name"
+                placeholder="Last Name"
+              />
+              <div className="flex items-center justify-between text-md font-semibold mb-2">
+                <label htmlFor="username">Username</label>
+                {errors.username && touched.username && (
+                  <div className="bg-red-100 text-xs sm:text-sm font-medium text-red-500 border border-solid border-red-500 px-2 py-0.5 rounded">
+                    {errors.username}
+                  </div>
+                )}
+              </div>
+              <Field
+                className="w-full bg-transparent text-md font-medium p-2 mb-6 border border-solid border-secondary rounded"
+                placeholder="e.g. Crafty"
+                id="username"
+                name="username"
+              />
+            </>
+          )}
+          {!stepTwo ? (
+            <div
+              onClick={() => {
+                if (touched.email && touched.password && touched.confirmPassword && !errors.email && !errors.password && !errors.confirmPassword) {
+                  setStepTwo(true);
+                }
+              }}
+              className="w-full h-14 flex justify-center items-center bg-secondary text-primary rounded text-md font-bold font-display uppercase border border-solid border-secondary"
+            >
+              Continue
+            </div>
+          ) : (
+            <LoadingButton
+              className="w-full h-14 flex justify-center items-center bg-secondary text-primary rounded text-md font-bold font-display uppercase border border-solid border-secondary"
+              dark
+              loading={isSubmitting}
+              disabled={isSubmitting}
+            >
+              Sign Up
+            </LoadingButton>
+          )}
         </Form>
       )}
     </Formik>
   );
 };
+
+interface SignUpWithGoogleValues {
+  first_name: string;
+  last_name: string;
+  username: string;
+}
 
 interface SignUpHomeProps {
   setDisabled: Dispatch<SetStateAction<boolean>>;
@@ -151,7 +214,7 @@ interface SignUpHomeProps {
 }
 
 const SignUpHome: React.FC<SignUpHomeProps> = ({ setEmail, setView, onAuth, setDisabled }) => {
-  const [username, setUsername] = useState(false);
+  const [stepTwo, setStepTwo] = useState(false);
   const [googleAuthCode, setGoogleAuthCode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [, registerWithGoogle] = useMutation(RegisterWithGoogleDocument);
@@ -159,7 +222,7 @@ const SignUpHome: React.FC<SignUpHomeProps> = ({ setEmail, setView, onAuth, setD
   const login = useGoogleLogin({
     onSuccess: (codeResponse) => {
       setGoogleAuthCode(codeResponse.code);
-      setUsername(true);
+      setStepTwo(true);
     },
     onError: () => {
       setError("Something went wrong...");
@@ -173,16 +236,16 @@ const SignUpHome: React.FC<SignUpHomeProps> = ({ setEmail, setView, onAuth, setD
 
   return (
     <>
-      {!username && !googleAuthCode ? (
+      {!stepTwo && !googleAuthCode ? (
         <>
-          <h2 className="w-full text-2xl flex items-center justify-between font-bold font-display uppercase mb-4">
+          <h1 className="w-full text-2xl flex items-center justify-between font-bold font-display uppercase pb-2 mb-4 border-b border-solid border-gray-300">
             Sign Up
             {error && (
               <span className="bg-red-100 text-xs sm:text-sm font-medium font-sans normal-case text-red-500 border border-solid border-red-500 px-2 py-0.5 rounded">
                 {error}
               </span>
             )}
-          </h2>
+          </h1>
           <button
             onClick={() => {
               setDisabled(true);
@@ -208,6 +271,8 @@ const SignUpHome: React.FC<SignUpHomeProps> = ({ setEmail, setView, onAuth, setD
       ) : (
         <Formik
           initialValues={{
+            first_name: "",
+            last_name: "",
             username: "",
           }}
           validationSchema={yup.object().shape({
@@ -217,41 +282,75 @@ const SignUpHome: React.FC<SignUpHomeProps> = ({ setEmail, setView, onAuth, setD
               .matches(/^[A-Za-z0-9]*$/, "Only ABC's & Numbers")
               .max(20, "Max 20 Chars")
               .required("Required"),
+            first_name: yup.string().max(20, "Max 20 Chars").required("Required"),
+            last_name: yup.string().max(20, "Max 20 Chars").required("Required"),
           })}
-          onSubmit={async (values: { username: string }, { setErrors }: FormikHelpers<{ username: string }>) => {
+          onSubmit={async (values: SignUpWithGoogleValues, { setErrors }: FormikHelpers<SignUpWithGoogleValues>) => {
             setDisabled(true);
-            const response = await registerWithGoogle(
-              { username: values.username.toLowerCase() },
-              {
-                fetchOptions: {
-                  credentials: "include",
-                  headers: {
-                    Authorization: `Basic ${googleAuthCode}`,
-                  },
+            const request = {
+              registerOptions: {
+                username: values.username.toLowerCase(),
+                first_name: values.first_name,
+                last_name: values.last_name,
+              },
+            };
+            const response = await registerWithGoogle(request, {
+              fetchOptions: {
+                credentials: "include",
+                headers: {
+                  Authorization: `Basic ${googleAuthCode}`,
                 },
-              }
-            );
+              },
+            });
             if (response.data?.registerWithGoogle.errors) {
               setErrors(toErrorMap(response.data.registerWithGoogle.errors));
             } else if (response.data?.registerWithGoogle.user && response.data?.registerWithGoogle.auth) {
               onAuth(response.data.registerWithGoogle);
-              setDisabled(false);
             }
+            setDisabled(false);
           }}
         >
           {({ errors, touched, isSubmitting }) => (
             <Form className="w-full">
-              <h2 className="text-2xl flex items-center font-bold font-display uppercase mb-4">
+              <h1 className="text-2xl flex items-center font-bold font-display uppercase pb-2 mb-4 border-b border-solid border-gray-300">
                 <BiArrowBack
                   onClick={() => {
-                    setUsername(false);
+                    setStepTwo(false);
                     setGoogleAuthCode(null);
                     setDisabled(false);
                   }}
                   className="cursor-pointer text-3xl mr-4 flex-shrink-0"
                 />
-                Create Username
-              </h2>
+                Sign Up
+              </h1>
+              <div className="flex items-center justify-between text-md font-semibold mb-2">
+                <label htmlFor="first-name">First Name</label>
+                {errors.first_name && touched.first_name && (
+                  <div className="bg-red-100 text-xs sm:text-sm font-medium text-red-500 border border-solid border-red-500 px-2 py-0.5 rounded">
+                    {errors.first_name}
+                  </div>
+                )}
+              </div>
+              <Field
+                className="w-full bg-transparent text-md font-medium p-2 mb-4 border border-solid border-secondary rounded"
+                id="first_name"
+                name="first_name"
+                placeholder="First Name"
+              />
+              <div className="flex items-center justify-between text-md font-semibold mb-2">
+                <label htmlFor="last-name">Last Name</label>
+                {errors.last_name && touched.last_name && (
+                  <div className="bg-red-100 text-xs sm:text-sm font-medium text-red-500 border border-solid border-red-500 px-2 py-0.5 rounded">
+                    {errors.last_name}
+                  </div>
+                )}
+              </div>
+              <Field
+                className="w-full bg-transparent text-md font-medium p-2 mb-4 border border-solid border-secondary rounded"
+                id="last_name"
+                name="last_name"
+                placeholder="Last Name"
+              />
               <div className="flex items-center justify-between text-md font-semibold mb-2">
                 <label htmlFor="username">Username</label>
                 {errors.username && touched.username && (
@@ -315,16 +414,16 @@ const LoginWithEmail: React.FC<LoginWithEmailProps> = ({ setEmail, onAuth, setDi
           setErrors(toErrorMap(response.data.login.errors));
         } else if (response.data?.login.user && response.data?.login.auth) {
           onAuth(response.data.login);
-          setDisabled(false);
         }
+        setDisabled(false);
       }}
     >
       {({ errors, touched, isSubmitting }) => (
         <Form className="w-full">
-          <h2 className="text-2xl flex items-center font-bold font-display uppercase mb-4">
+          <h1 className="text-2xl flex items-center font-bold font-display uppercase pb-2 mb-4 border-b border-solid border-gray-300">
             <BiArrowBack onClick={() => setEmail(false)} className="cursor-pointer text-3xl mr-4 flex-shrink-0" />
             Login
-          </h2>
+          </h1>
           <div className="flex items-center justify-between text-md font-semibold mb-2">
             <label htmlFor="email">Email</label>
             {errors.email && touched.email && (
@@ -413,14 +512,14 @@ const LoginHome: React.FC<LoginHomeProps> = ({ setEmail, setView, onAuth, setDis
 
   return (
     <>
-      <h2 className="w-full text-2xl flex items-center justify-between font-bold uppercase font-display mb-4">
+      <h1 className="w-full text-2xl flex items-center justify-between font-bold uppercase font-display pb-2 mb-4 border-b border-solid border-gray-300">
         Login
         {error && (
           <span className="bg-red-100 text-xs sm:text-sm font-medium font-sans normal-case text-red-500 border border-solid border-red-500 px-2 py-0.5 rounded">
             {error}
           </span>
         )}
-      </h2>
+      </h1>
       <button
         onClick={() => {
           setDisabled(true);

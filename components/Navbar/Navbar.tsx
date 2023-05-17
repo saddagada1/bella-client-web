@@ -1,5 +1,6 @@
+"use client";
+
 import Link from "next/link";
-import Image from "next/image";
 import { Dispatch, SetStateAction, useState } from "react";
 import { FiSearch, FiMail, FiUser, FiShoppingBag, FiArrowRight, FiHeart, FiHome } from "react-icons/fi";
 import { GrMenu } from "react-icons/gr";
@@ -10,6 +11,7 @@ import { resetAuthentication, setAuthentication } from "@/redux/slices/authSlice
 import { calcExpiresIn } from "@/utils/calc";
 import AuthModal from "../AuthModal/AuthModal";
 import { AnimatePresence, motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 interface SideMenuProps {
   setVisible: Dispatch<SetStateAction<boolean>>;
@@ -133,10 +135,12 @@ const Navbar: React.FC = () => {
   const [showSideMenu, setShowSideMenu] = useState(false);
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector((store) => store.auth.isAuthenticated);
+  const router = useRouter();
+  const [query, setQuery] = useState("");
 
   return (
     <>
-      <nav className="w-full h-[7.5rem] fixed z-40 flex-shrink-0 flex flex-col justify-center items-center bg-primary">
+      <nav className="w-full h-[7.5rem] fixed z-40 flex flex-col justify-center items-center bg-primary">
         <div className="w-full h-16 px-4 flex justify-between items-center">
           <div className="flex items-center">
             <button onClick={() => setShowSideMenu(true)} className="text-3xl mr-4">
@@ -157,7 +161,20 @@ const Navbar: React.FC = () => {
             <Link className="hidden" href="/shop">
               Shop
             </Link>
-            {!isAuthenticated ? (
+            {isAuthenticated === null ? null : isAuthenticated ? (
+              <>
+                <Link className="hidden sm:block ml-6 text-3xl" href="/messages">
+                  <FiMail />
+                </Link>
+                <Link className="ml-6 text-3xl" href="/profile">
+                  <FiUser />
+                </Link>
+                <Link className="ml-6 text-3xl relative" href="/bag">
+                  <FiShoppingBag />
+                  <span className="absolute -top-1 -right-1 px-1 pt-0.5 bg-red-500 text-primary text-xs rounded-md">9+</span>
+                </Link>
+              </>
+            ) : (
               <>
                 <button
                   onClick={() => {
@@ -178,19 +195,6 @@ const Navbar: React.FC = () => {
                   Login
                 </button>
               </>
-            ) : (
-              <>
-                <Link className="hidden sm:block ml-6 text-3xl" href="/messages">
-                  <FiMail />
-                </Link>
-                <Link className="ml-6 text-3xl" href="/profile">
-                  <FiUser />
-                </Link>
-                <Link className="ml-6 text-3xl relative" href="/bag">
-                  <FiShoppingBag />
-                  <span className="absolute -top-1 -right-1 px-1 pt-0.5 bg-red-500 text-primary text-xs rounded-md">9+</span>
-                </Link>
-              </>
             )}
           </div>
         </div>
@@ -204,7 +208,13 @@ const Navbar: React.FC = () => {
           </div>
           <div className="w-full h-full flex justify-between bg-primary items-center text-md font-medium rounded">
             <FiSearch className="text-lg ml-3 flex-shrink-0 text-gray-400" />
-            <input type="text" placeholder="Search for items, designers or styles..." className="w-full mx-3 bg-transparent focus:outline-none" />
+            <input
+              onChange={(event) => setQuery(event.currentTarget.value)}
+              onKeyDown={(event) => (event.key === "Enter" ? router.push("/store/" + query) : null)}
+              type="text"
+              placeholder="Search for items, designers or styles..."
+              className="w-full mx-3 bg-transparent focus:outline-none"
+            />
           </div>
         </div>
       </nav>

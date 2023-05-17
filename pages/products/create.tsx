@@ -5,14 +5,15 @@ import { Formik, FormikHelpers, Form, Field } from "formik";
 import { FiCheck } from "react-icons/fi";
 import * as yup from "yup";
 import Select, { components } from "react-select";
-import { promises as fs } from "fs";
-import path from "path";
-import { GetStaticProps, NextPage, InferGetStaticPropsType } from "next";
+import { NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
 import clsx from "clsx";
-import { Department, Country, Designer, Condition, Colour } from "@/utils/types";
 import { FixedSizeList as List } from "react-window";
+import useSWR from "swr";
+import { Classifiers } from "@/utils/types";
+import { fetcher } from "@/utils/fetcher";
+import WithAuth from "@/components/HOC/WithAuth";
 
 const ConditionOption = (props: any) => {
   return (
@@ -54,35 +55,6 @@ const CustomMenuList = (props: any) => {
   );
 };
 
-export const getStaticProps: GetStaticProps<{
-  departments: Department[];
-  countries: Country[];
-  designers: Designer[];
-  conditions: Condition[];
-  colours: Colour[];
-  eras: string[];
-  sources: string[];
-  styles: string[];
-}> = async () => {
-  const erasResponse = await fs.readFile(path.resolve(process.cwd(), "./public/data/eras.json"), "utf-8");
-  const designersResponse = await fs.readFile(path.resolve(process.cwd(), "./public/data/designers.json"), "utf-8");
-  const coloursResponse = await fs.readFile(path.resolve(process.cwd(), "./public/data/colours.json"), "utf-8");
-  const conditionsResponse = await fs.readFile(path.resolve(process.cwd(), "./public/data/conditions.json"), "utf-8");
-  const countriesResponse = await fs.readFile(path.resolve(process.cwd(), "./public/data/countries.json"), "utf-8");
-  const departmentsResponse = await fs.readFile(path.resolve(process.cwd(), "./public/data/departments.json"), "utf-8");
-  const sourcesResponse = await fs.readFile(path.resolve(process.cwd(), "./public/data/sources.json"), "utf-8");
-  const stylesResponse = await fs.readFile(path.resolve(process.cwd(), "./public/data/styles.json"), "utf-8");
-  const eras = JSON.parse(erasResponse);
-  const designers = JSON.parse(designersResponse);
-  const colours = JSON.parse(coloursResponse);
-  const conditions = JSON.parse(conditionsResponse);
-  const countries = JSON.parse(countriesResponse);
-  const departments = JSON.parse(departmentsResponse);
-  const sources = JSON.parse(sourcesResponse);
-  const styles = JSON.parse(stylesResponse);
-  return { props: { eras, designers, colours, conditions, countries, departments, sources, styles } };
-};
-
 interface CreateValues {
   name: string;
   description: string;
@@ -105,16 +77,9 @@ interface CreateValues {
   price: string;
 }
 
-const Create: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
-  eras,
-  designers,
-  colours,
-  conditions,
-  countries,
-  departments,
-  sources,
-  styles,
-}) => {
+const Create: NextPage = () => {
+  const { data } = useSWR<Classifiers>("/api/classifiers", fetcher);
+
   return (
     <>
       <Head>
@@ -156,7 +121,7 @@ const Create: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
             is: (department: string, category: string) =>
               department &&
               category &&
-              departments.find((d) => d.name === department)!.categories.find((c) => c.name === category)!.sizes !== undefined,
+              data?.departments.find((d) => d.name === department)!.categories.find((c) => c.name === category)!.sizes !== undefined,
             then: () => yup.string().required("Required"),
             otherwise: () => yup.string().nullable(),
           }),
@@ -241,7 +206,7 @@ const Create: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
                   setFieldValue("condition", "");
                 }
               }}
-              options={conditions.map((condition) => ({ value: condition.description, label: condition.name }))}
+              options={data?.conditions.map((condition) => ({ value: condition.description, label: condition.name }))}
               components={{ Option: ConditionOption }}
             />
             <div className="flex items-center justify-between text-md font-semibold mb-2">
@@ -281,7 +246,7 @@ const Create: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
                   setFieldValue("quantity", 1);
                 }
               }}
-              options={departments.map((department) => ({ value: department.name, label: department.name }))}
+              options={data?.departments.map((department) => ({ value: department.name, label: department.name }))}
             />
             {values.department && (
               <>
@@ -321,7 +286,7 @@ const Create: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
                       setFieldValue("quantity", 1);
                     }
                   }}
-                  options={departments
+                  options={data?.departments
                     .find((department) => department.name === values.department)!
                     .categories.map((category) => ({ value: category.name, label: category.name }))}
                 />
@@ -363,13 +328,13 @@ const Create: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
                       setFieldValue("quantity", 1);
                     }
                   }}
-                  options={departments
+                  options={data?.departments
                     .find((department) => department.name === values.department)!
                     .categories.find((category) => category.name === values.category)!
                     .subcategories.map((subcategory) => ({ value: subcategory, label: subcategory }))}
                 />
                 <div className="flex items-center">
-                  {departments
+                  {data?.departments
                     .find((department) => department.name === values.department)!
                     .categories.find((category) => category.name === values.category)!.sizes && (
                     <div className="w-1/2 mr-4">
@@ -403,7 +368,7 @@ const Create: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
                             setFieldValue("size", null);
                           }
                         }}
-                        options={departments
+                        options={data?.departments
                           .find((department) => department.name === values.department)!
                           .categories.find((category) => category.name === values.category)!
                           .sizes!.map((size) => ({ value: size, label: size }))}
@@ -477,7 +442,7 @@ const Create: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
                   setFieldValue("designer", null);
                 }
               }}
-              options={designers.map((designer) => ({ value: designer.name, label: designer.name }))}
+              options={data?.designers.map((designer) => ({ value: designer.name, label: designer.name }))}
               components={{ MenuList: CustomMenuList }}
             />
             <div className="flex items-center justify-between text-md font-semibold mb-2">
@@ -509,7 +474,7 @@ const Create: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
                   setFieldValue("colour", null);
                 }
               }}
-              options={colours.map((colour) => ({ value: colour.code, label: colour.name }))}
+              options={data?.colours.map((colour) => ({ value: colour.code, label: colour.name }))}
               components={{ Option: ColourOption }}
             />
             <div className="flex items-center justify-between text-md font-semibold mb-2">
@@ -541,7 +506,7 @@ const Create: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
                   setFieldValue("source", null);
                 }
               }}
-              options={sources.map((source) => ({ value: source, label: source }))}
+              options={data?.sources.map((source) => ({ value: source, label: source }))}
             />
             <div className="flex items-center justify-between text-md font-semibold mb-2">
               <label htmlFor="era">Era</label>
@@ -572,7 +537,7 @@ const Create: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
                   setFieldValue("era", null);
                 }
               }}
-              options={eras.map((era) => ({ value: era, label: era }))}
+              options={data?.eras.map((era) => ({ value: era, label: era }))}
             />
             <div className="flex items-center justify-between text-md font-semibold mb-2">
               <label htmlFor="style">Style</label>
@@ -603,7 +568,7 @@ const Create: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
                   setFieldValue("style", null);
                 }
               }}
-              options={styles.map((style) => ({ value: style, label: style }))}
+              options={data?.styles.map((style) => ({ value: style, label: style }))}
             />
             <h2 className="text-lg font-bold font-display uppercase mt-9 pb-4 mb-4 border-b border-solid border-gray-300">Location</h2>
             <div className="flex items-center justify-between text-md font-semibold mb-2">
@@ -634,7 +599,7 @@ const Create: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
                   setFieldValue("country", "");
                 }
               }}
-              options={countries.map((country) => ({ value: country.name, label: country.name }))}
+              options={data?.countries.map((country) => ({ value: country.name, label: country.name }))}
             />
             <h2 className="text-lg font-bold font-display uppercase mt-9 pb-4 mb-4 border-b border-solid border-gray-300">Shipping</h2>
             <div className="w-2/3 sm:w-1/2 flex items-center text-md font-semibold mb-6">
@@ -758,4 +723,4 @@ const Create: NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
   );
 };
 
-export default Create;
+export default WithAuth(Create);
