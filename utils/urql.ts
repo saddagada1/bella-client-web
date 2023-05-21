@@ -4,7 +4,7 @@ import { fetchExchange, makeOperation, SSRExchange } from "urql";
 import { resetAuthentication, setAuthentication } from "../redux/slices/authSlice";
 import { store } from "../redux/store";
 import { calcExpiresIn, calcIsExpiring } from "./calc";
-import { fetchRefreshToken } from "./fetchWithAxios";
+import { fetchRefreshToken } from "./axios";
 import Router from "next/router";
 
 export const createUrqlClient = (ssrExchange: SSRExchange) => ({
@@ -24,7 +24,9 @@ export const createUrqlClient = (ssrExchange: SSRExchange) => ({
           }
 
           const fetchOptions =
-            typeof operation.context.fetchOptions === "function" ? operation.context.fetchOptions() : operation.context.fetchOptions || {};
+            typeof operation.context.fetchOptions === "function"
+              ? operation.context.fetchOptions()
+              : operation.context.fetchOptions || {};
 
           return makeOperation(operation.kind, operation, {
             ...operation.context,

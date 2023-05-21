@@ -2,7 +2,7 @@ import { useAppDispatch } from "@/redux/hooks";
 import Navbar from "../Navbar/Navbar";
 import { Inter, Unbounded } from "next/font/google";
 import { useEffect } from "react";
-import { fetchRefreshToken } from "@/utils/fetchWithAxios";
+import { fetchRefreshToken } from "@/utils/axios";
 import { setAuthentication } from "@/redux/slices/authSlice";
 import { calcExpiresIn } from "@/utils/calc";
 
@@ -43,7 +43,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <>
-      <div className={`${unbounded.variable} ${inter.variable} font-sans flex flex-col items-center`}>
+      <div
+        className={`${unbounded.variable} ${inter.variable} font-sans flex flex-col items-center`}
+      >
         <Navbar />
         <main className="w-full h-full mt-[7.5rem]">{children}</main>
       </div>

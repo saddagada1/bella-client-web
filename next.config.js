@@ -5,6 +5,9 @@ const nextConfig = {
     REFRESH_TOKEN_ENDPOINT: process.env.REFRESH_TOKEN_ENDPOINT,
     GOOGLE_OAUTH_CLIENT_ID: process.env.GOOGLE_OAUTH_CLIENT_ID,
   },
+  images: {
+    domains: [process.env.IMAGES_SOURCE_URL],
+  },
 };
 
 module.exports = nextConfig;

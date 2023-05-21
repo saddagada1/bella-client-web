@@ -1,0 +1,6 @@
+mutation CreateProduct($productInput: CreateProductInput!) {
+  createProduct(ProductInput: $productInput) {
+    id
+    upload_urls
+  }
+}

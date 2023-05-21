@@ -1,19 +1,25 @@
 import LoadingButton from "@/components/Utils/LoadingButton";
-import { toErrorMap } from "@/utils/toErrorMap";
 import { trimString } from "@/utils/trimString";
-import { Formik, FormikHelpers, Form, Field } from "formik";
+import { Formik, Form, Field } from "formik";
 import { FiCheck } from "react-icons/fi";
 import * as yup from "yup";
 import Select, { components } from "react-select";
 import { NextPage } from "next";
 import Head from "next/head";
-import Image from "next/image";
 import clsx from "clsx";
 import { FixedSizeList as List } from "react-window";
-import useSWR from "swr";
+import useSWRImmutable from "swr";
 import { Classifiers } from "@/utils/types";
 import { fetcher } from "@/utils/fetcher";
 import WithAuth from "@/components/HOC/WithAuth";
+import UploadImages from "@/components/UploadImages/UploadImages";
+import { useMutation } from "urql";
+import { CreateProductDocument, DeleteProductDocument } from "@/generated/graphql";
+import { putProductImage } from "@/utils/axios";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import ErrorModal from "@/components/Utils/ErrorModal";
+import { useAppSelector } from "@/redux/hooks";
 
 const ConditionOption = (props: any) => {
   return (
@@ -48,7 +54,13 @@ const CustomMenuList = (props: any) => {
 
   return (
     <div>
-      <List width={maxWidth} height={maxHeight} itemCount={children.length} itemSize={itemHeight} initialScrollOffset={initialOffset}>
+      <List
+        width={maxWidth}
+        height={maxHeight}
+        itemCount={children.length}
+        itemSize={itemHeight}
+        initialScrollOffset={initialOffset}
+      >
         {({ index, style }) => <div style={style}>{children[index]}</div>}
       </List>
     </div>
@@ -56,6 +68,7 @@ const CustomMenuList = (props: any) => {
 };
 
 interface CreateValues {
+  images: File[];
   name: string;
   description: string;
   condition: string;
@@ -78,16 +91,27 @@ interface CreateValues {
 }
 
 const Create: NextPage = () => {
-  const { data } = useSWR<Classifiers>("/api/classifiers", fetcher);
+  const { data } = useSWRImmutable<Classifiers>("/api/classifiers", fetcher, {
+    revalidateIfStale: false,
+    revalidateOnFocus: false,
+  });
+  const user = useAppSelector((store) => store.auth.user);
+  const [, createProduct] = useMutation(CreateProductDocument);
+  const [, deleteProduct] = useMutation(DeleteProductDocument);
+  const [showError, setShowError] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
 
   return (
     <>
       <Head>
         <title>New Product - Bella</title>
       </Head>
+      {showError && error && <ErrorModal setVisible={setShowError} error={error} />}
       <Formik
         initialValues={
           {
+            images: [],
             name: "",
             description: "",
             condition: "",
@@ -101,7 +125,7 @@ const Create: NextPage = () => {
             source: null,
             era: null,
             style: null,
-            country: "",
+            country: user!.country,
             offer_free_shipping: false,
             shipping_price: "",
             offer_global_shipping: false,
@@ -110,6 +134,7 @@ const Create: NextPage = () => {
           } as CreateValues
         }
         validationSchema={yup.object().shape({
+          images: yup.array().min(1, "Required"),
           name: yup.string().required("Required"),
           description: yup.string().max(1000, "Max 1000 Chars").required("Required"),
           condition: yup.string().required("Required"),
@@ -121,7 +146,9 @@ const Create: NextPage = () => {
             is: (department: string, category: string) =>
               department &&
               category &&
-              data?.departments.find((d) => d.name === department)!.categories.find((c) => c.name === category)!.sizes !== undefined,
+              data?.departments
+                .find((d) => d.name === department)!
+                .categories.find((c) => c.name === category)!.sizes !== undefined,
             then: () => yup.string().required("Required"),
             otherwise: () => yup.string().nullable(),
           }),
@@ -138,14 +165,58 @@ const Create: NextPage = () => {
           }),
           price: yup.string().required("Required"),
         })}
-        onSubmit={async (values: CreateValues, { setErrors }: FormikHelpers<CreateValues>) => {
-          alert("submit");
+        onSubmit={async (values: CreateValues) => {
+          const { images, ...rest } = values;
+          const request = {
+            productInput: {
+              ...rest,
+              name: trimString(values.name),
+              description: trimString(values.description),
+              num_of_images: values.images.length,
+              size: values.size === null ? "One Size" : values.size,
+              shipping_price: values.offer_free_shipping ? 0.0 : parseFloat(values.shipping_price),
+              global_shipping_price: !values.offer_global_shipping
+                ? 0.0
+                : parseFloat(values.global_shipping_price),
+              price: parseFloat(values.price),
+            },
+          };
+          const response = await createProduct(request);
+          if (response.data?.createProduct) {
+            const put_requests = response.data.createProduct.upload_urls.map(
+              async (url, index) => await putProductImage(url, values.images[index])
+            );
+            const uploads = await Promise.all(put_requests);
+            if (uploads.every((upload) => upload === true)) {
+              router.push("/profile");
+            } else {
+              await deleteProduct({ id: response.data.createProduct.id });
+              setError("Something went wrong creating your product. Please retry.");
+              setShowError(true);
+            }
+          } else {
+            setError("Something went wrong creating your product. Please retry.");
+            setShowError(true);
+          }
         }}
       >
         {({ errors, touched, values, setFieldValue, isSubmitting }) => (
           <Form className="w-full pt-10 sm:pb-28 px-4">
-            <h1 className="text-2xl font-black font-display uppercase pb-6 border-b border-solid border-gray-300">New Product</h1>
-            <h2 className="text-lg font-bold font-display uppercase mt-9 pb-4 mb-4 border-b border-solid border-gray-300">General</h2>
+            <h1 className="text-2xl font-black font-display uppercase pb-6 border-b border-solid border-gray-300">
+              New Product
+            </h1>
+            <h2 className="text-lg font-bold font-display uppercase mt-9 pb-4 mb-4 border-b border-solid border-gray-300">
+              General
+            </h2>
+            <div className="flex items-center justify-between text-md font-semibold mb-2">
+              <label htmlFor="images">Images</label>
+              {errors.images && touched.images && (
+                <div className="bg-red-100 text-xs sm:text-sm font-medium text-red-500 border border-solid border-red-500 px-2 py-0.5 rounded">
+                  {errors.images as string}
+                </div>
+              )}
+            </div>
+            <UploadImages maxImages={9} setImages={(images) => setFieldValue("images", images)} />
             <div className="flex items-center justify-between text-md font-semibold mb-2">
               <label htmlFor="name">Name</label>
               {errors.name && touched.name && (
@@ -175,8 +246,12 @@ const Create: NextPage = () => {
               name="description"
               as="textarea"
             />
-            <p className="w-full text-right text-sm text-gray-500 mb-4">{values.description ? 1000 - values.description.length : 1000} Chars Left</p>
-            <h2 className="text-lg font-bold font-display uppercase pb-4 mb-4 border-b border-solid border-gray-300">Specifics</h2>
+            <p className="w-full text-right text-sm text-gray-500 mb-4">
+              {values.description ? 1000 - values.description.length : 1000} Chars Left
+            </p>
+            <h2 className="text-lg font-bold font-display uppercase pb-4 mb-4 border-b border-solid border-gray-300">
+              Specifics
+            </h2>
             <div className="flex items-center justify-between text-md font-semibold mb-2">
               <label htmlFor="condition">Condition</label>
               {errors.condition && touched.condition && (
@@ -189,10 +264,14 @@ const Create: NextPage = () => {
               className="font-sans text-md font-medium mb-4"
               classNames={{
                 control: () => "p-3 border border-solid border-secondary rounded",
-                menu: () => "p-2 mt-2 bg-primary border border-solid border-secondary rounded shadow-2xl",
+                menu: () =>
+                  "p-2 mt-2 bg-primary border border-solid border-secondary rounded shadow-2xl",
                 menuList: () => "flex flex-col gap-2",
                 option: ({ isSelected }) =>
-                  clsx("py-2 px-3 hover:bg-gray-300 hover:text-secondary rounded", isSelected && "bg-secondary text-primary"),
+                  clsx(
+                    "py-2 px-3 hover:bg-gray-300 hover:text-secondary rounded",
+                    isSelected && "bg-secondary text-primary"
+                  ),
               }}
               unstyled
               placeholder=""
@@ -206,7 +285,10 @@ const Create: NextPage = () => {
                   setFieldValue("condition", "");
                 }
               }}
-              options={data?.conditions.map((condition) => ({ value: condition.description, label: condition.name }))}
+              options={data?.conditions.map((condition) => ({
+                value: condition.description,
+                label: condition.name,
+              }))}
               components={{ Option: ConditionOption }}
             />
             <div className="flex items-center justify-between text-md font-semibold mb-2">
@@ -221,10 +303,14 @@ const Create: NextPage = () => {
               className="font-sans text-md font-medium mb-4"
               classNames={{
                 control: () => "p-3 border border-solid border-secondary rounded",
-                menu: () => "p-2 mt-2 bg-primary border border-solid border-secondary rounded shadow-2xl",
+                menu: () =>
+                  "p-2 mt-2 bg-primary border border-solid border-secondary rounded shadow-2xl",
                 menuList: () => "flex flex-col gap-2",
                 option: ({ isSelected }) =>
-                  clsx("py-2 px-3 hover:bg-gray-300 hover:text-secondary rounded", isSelected && "bg-secondary text-primary"),
+                  clsx(
+                    "py-2 px-3 hover:bg-gray-300 hover:text-secondary rounded",
+                    isSelected && "bg-secondary text-primary"
+                  ),
               }}
               unstyled
               placeholder=""
@@ -246,7 +332,10 @@ const Create: NextPage = () => {
                   setFieldValue("quantity", 1);
                 }
               }}
-              options={data?.departments.map((department) => ({ value: department.name, label: department.name }))}
+              options={data?.departments.map((department) => ({
+                value: department.name,
+                label: department.name,
+              }))}
             />
             {values.department && (
               <>
@@ -263,10 +352,14 @@ const Create: NextPage = () => {
                   className="font-sans text-md font-medium mb-4"
                   classNames={{
                     control: () => "p-3 border border-solid border-secondary rounded",
-                    menu: () => "p-2 mt-2 bg-primary border border-solid border-secondary rounded shadow-2xl",
+                    menu: () =>
+                      "p-2 mt-2 bg-primary border border-solid border-secondary rounded shadow-2xl",
                     menuList: () => "flex flex-col gap-2",
                     option: ({ isSelected }) =>
-                      clsx("py-2 px-3 hover:bg-gray-300 hover:text-secondary rounded", isSelected && "bg-secondary text-primary"),
+                      clsx(
+                        "py-2 px-3 hover:bg-gray-300 hover:text-secondary rounded",
+                        isSelected && "bg-secondary text-primary"
+                      ),
                   }}
                   unstyled
                   placeholder=""
@@ -307,10 +400,14 @@ const Create: NextPage = () => {
                   className="font-sans text-md font-medium mb-4"
                   classNames={{
                     control: () => "p-3 border border-solid border-secondary rounded",
-                    menu: () => "p-2 mt-2 bg-primary border border-solid border-secondary rounded shadow-2xl",
+                    menu: () =>
+                      "p-2 mt-2 bg-primary border border-solid border-secondary rounded shadow-2xl",
                     menuList: () => "flex flex-col gap-2",
                     option: ({ isSelected }) =>
-                      clsx("py-2 px-3 hover:bg-gray-300 hover:text-secondary rounded", isSelected && "bg-secondary text-primary"),
+                      clsx(
+                        "py-2 px-3 hover:bg-gray-300 hover:text-secondary rounded",
+                        isSelected && "bg-secondary text-primary"
+                      ),
                   }}
                   unstyled
                   placeholder=""
@@ -331,7 +428,10 @@ const Create: NextPage = () => {
                   options={data?.departments
                     .find((department) => department.name === values.department)!
                     .categories.find((category) => category.name === values.category)!
-                    .subcategories.map((subcategory) => ({ value: subcategory, label: subcategory }))}
+                    .subcategories.map((subcategory) => ({
+                      value: subcategory,
+                      label: subcategory,
+                    }))}
                 />
                 <div className="flex items-center">
                   {data?.departments
@@ -351,10 +451,14 @@ const Create: NextPage = () => {
                         className="font-sans text-md font-medium mt-2 mb-4"
                         classNames={{
                           control: () => "p-3 border border-solid border-secondary rounded",
-                          menu: () => "p-2 mt-2 bg-primary border border-solid border-secondary rounded shadow-2xl",
+                          menu: () =>
+                            "p-2 mt-2 bg-primary border border-solid border-secondary rounded shadow-2xl",
                           menuList: () => "flex flex-col gap-2",
                           option: ({ isSelected }) =>
-                            clsx("py-2 px-3 hover:bg-gray-300 hover:text-secondary rounded", isSelected && "bg-secondary text-primary"),
+                            clsx(
+                              "py-2 px-3 hover:bg-gray-300 hover:text-secondary rounded",
+                              isSelected && "bg-secondary text-primary"
+                            ),
                         }}
                         unstyled
                         placeholder=""
@@ -389,10 +493,14 @@ const Create: NextPage = () => {
                       className="font-sans text-md font-medium mt-2 mb-4"
                       classNames={{
                         control: () => "p-3 border border-solid border-secondary rounded",
-                        menu: () => "p-2 mt-2 bg-primary border border-solid border-secondary rounded shadow-2xl",
+                        menu: () =>
+                          "p-2 mt-2 bg-primary border border-solid border-secondary rounded shadow-2xl",
                         menuList: () => "flex flex-col gap-2",
                         option: ({ isSelected }) =>
-                          clsx("py-2 px-3 hover:bg-gray-300 hover:text-secondary rounded", isSelected && "bg-secondary text-primary"),
+                          clsx(
+                            "py-2 px-3 hover:bg-gray-300 hover:text-secondary rounded",
+                            isSelected && "bg-secondary text-primary"
+                          ),
                       }}
                       unstyled
                       isClearable
@@ -413,7 +521,9 @@ const Create: NextPage = () => {
                 </div>
               </>
             )}
-            <h2 className="text-lg font-bold font-display uppercase mt-9 pb-4 mb-4 border-b border-solid border-gray-300">Enhance</h2>
+            <h2 className="text-lg font-bold font-display uppercase mt-9 pb-4 mb-4 border-b border-solid border-gray-300">
+              Enhance
+            </h2>
             <div className="flex items-center justify-between text-md font-semibold mb-2">
               <label htmlFor="designer">Designer</label>
               {errors.designer && touched.designer && (
@@ -426,10 +536,14 @@ const Create: NextPage = () => {
               className="font-sans text-md font-medium mb-4"
               classNames={{
                 control: () => "p-3 border border-solid border-secondary rounded",
-                menu: () => "p-2 mt-2 bg-primary border border-solid border-secondary rounded shadow-2xl",
+                menu: () =>
+                  "p-2 mt-2 bg-primary border border-solid border-secondary rounded shadow-2xl",
                 menuList: () => "flex flex-col gap-2",
                 option: ({ isSelected }) =>
-                  clsx("py-2 px-3 hover:bg-gray-300 hover:text-secondary rounded", isSelected && "bg-secondary text-primary"),
+                  clsx(
+                    "py-2 px-3 hover:bg-gray-300 hover:text-secondary rounded",
+                    isSelected && "bg-secondary text-primary"
+                  ),
               }}
               unstyled
               isClearable
@@ -442,7 +556,10 @@ const Create: NextPage = () => {
                   setFieldValue("designer", null);
                 }
               }}
-              options={data?.designers.map((designer) => ({ value: designer.name, label: designer.name }))}
+              options={data?.designers.map((designer) => ({
+                value: designer.name,
+                label: designer.name,
+              }))}
               components={{ MenuList: CustomMenuList }}
             />
             <div className="flex items-center justify-between text-md font-semibold mb-2">
@@ -457,10 +574,14 @@ const Create: NextPage = () => {
               className="font-sans text-md font-medium mb-4"
               classNames={{
                 control: () => "p-3 border border-solid border-secondary rounded",
-                menu: () => "p-2 mt-2 bg-primary border border-solid border-secondary rounded shadow-2xl",
+                menu: () =>
+                  "p-2 mt-2 bg-primary border border-solid border-secondary rounded shadow-2xl",
                 menuList: () => "flex flex-col gap-2",
                 option: ({ isSelected }) =>
-                  clsx("py-2 px-3 hover:bg-gray-300 hover:text-secondary rounded", isSelected && "bg-secondary text-primary"),
+                  clsx(
+                    "py-2 px-3 hover:bg-gray-300 hover:text-secondary rounded",
+                    isSelected && "bg-secondary text-primary"
+                  ),
               }}
               unstyled
               placeholder=""
@@ -489,10 +610,14 @@ const Create: NextPage = () => {
               className="font-sans text-md font-medium mb-4"
               classNames={{
                 control: () => "p-3 border border-solid border-secondary rounded",
-                menu: () => "p-2 mt-2 bg-primary border border-solid border-secondary rounded shadow-2xl",
+                menu: () =>
+                  "p-2 mt-2 bg-primary border border-solid border-secondary rounded shadow-2xl",
                 menuList: () => "flex flex-col gap-2",
                 option: ({ isSelected }) =>
-                  clsx("py-2 px-3 hover:bg-gray-300 hover:text-secondary rounded", isSelected && "bg-secondary text-primary"),
+                  clsx(
+                    "py-2 px-3 hover:bg-gray-300 hover:text-secondary rounded",
+                    isSelected && "bg-secondary text-primary"
+                  ),
               }}
               unstyled
               placeholder=""
@@ -520,10 +645,14 @@ const Create: NextPage = () => {
               className="font-sans text-md font-medium mb-4"
               classNames={{
                 control: () => "p-3 border border-solid border-secondary rounded",
-                menu: () => "p-2 mt-2 bg-primary border border-solid border-secondary rounded shadow-2xl",
+                menu: () =>
+                  "p-2 mt-2 bg-primary border border-solid border-secondary rounded shadow-2xl",
                 menuList: () => "flex flex-col gap-2",
                 option: ({ isSelected }) =>
-                  clsx("py-2 px-3 hover:bg-gray-300 hover:text-secondary rounded", isSelected && "bg-secondary text-primary"),
+                  clsx(
+                    "py-2 px-3 hover:bg-gray-300 hover:text-secondary rounded",
+                    isSelected && "bg-secondary text-primary"
+                  ),
               }}
               unstyled
               placeholder=""
@@ -551,10 +680,14 @@ const Create: NextPage = () => {
               className="font-sans text-md font-medium mb-4"
               classNames={{
                 control: () => "p-3 border border-solid border-secondary rounded",
-                menu: () => "p-2 mt-2 bg-primary border border-solid border-secondary rounded shadow-2xl",
+                menu: () =>
+                  "p-2 mt-2 bg-primary border border-solid border-secondary rounded shadow-2xl",
                 menuList: () => "flex flex-col gap-2",
                 option: ({ isSelected }) =>
-                  clsx("py-2 px-3 hover:bg-gray-300 hover:text-secondary rounded", isSelected && "bg-secondary text-primary"),
+                  clsx(
+                    "py-2 px-3 hover:bg-gray-300 hover:text-secondary rounded",
+                    isSelected && "bg-secondary text-primary"
+                  ),
               }}
               unstyled
               placeholder=""
@@ -570,7 +703,9 @@ const Create: NextPage = () => {
               }}
               options={data?.styles.map((style) => ({ value: style, label: style }))}
             />
-            <h2 className="text-lg font-bold font-display uppercase mt-9 pb-4 mb-4 border-b border-solid border-gray-300">Location</h2>
+            <h2 className="text-lg font-bold font-display uppercase mt-9 pb-4 mb-4 border-b border-solid border-gray-300">
+              Location
+            </h2>
             <div className="flex items-center justify-between text-md font-semibold mb-2">
               <label htmlFor="country">Country</label>
               {errors.country && touched.country && (
@@ -583,11 +718,18 @@ const Create: NextPage = () => {
               className="font-sans text-md font-medium mb-4"
               classNames={{
                 control: () => "p-3 border border-solid border-secondary rounded",
-                menu: () => "p-2 mt-2 bg-primary border border-solid border-secondary rounded shadow-2xl",
+                menu: () =>
+                  "p-2 mt-2 bg-primary border border-solid border-secondary rounded shadow-2xl",
                 menuList: () => "flex flex-col gap-2",
                 option: ({ isSelected }) =>
-                  clsx("py-2 px-3 hover:bg-gray-300 hover:text-secondary rounded", isSelected && "bg-secondary text-primary"),
+                  clsx(
+                    "py-2 px-3 hover:bg-gray-300 hover:text-secondary rounded",
+                    isSelected && "bg-secondary text-primary"
+                  ),
               }}
+              defaultValue={
+                values.country ? { value: values.country, label: values.country } : undefined
+              }
               unstyled
               placeholder=""
               isClearable
@@ -599,9 +741,14 @@ const Create: NextPage = () => {
                   setFieldValue("country", "");
                 }
               }}
-              options={data?.countries.map((country) => ({ value: country.name, label: country.name }))}
+              options={data?.countries.map((country) => ({
+                value: country.name,
+                label: country.name,
+              }))}
             />
-            <h2 className="text-lg font-bold font-display uppercase mt-9 pb-4 mb-4 border-b border-solid border-gray-300">Shipping</h2>
+            <h2 className="text-lg font-bold font-display uppercase mt-9 pb-4 mb-4 border-b border-solid border-gray-300">
+              Shipping
+            </h2>
             <div className="w-2/3 sm:w-1/2 flex items-center text-md font-semibold mb-6">
               <div
                 onClick={() => {
@@ -633,8 +780,11 @@ const Create: NextPage = () => {
                     type="text"
                     value={values.shipping_price}
                     onChange={(event) => {
-                      const currencyRegex = /^[1-9]*(\.[0-9]{0,2})?$/;
-                      if (currencyRegex.test(event.currentTarget.value)) {
+                      const currencyRegex = /^[1-9]+[0-9]*(\.[0-9]{0,2})?$/;
+                      if (
+                        currencyRegex.test(event.currentTarget.value) ||
+                        event.currentTarget.value === ""
+                      ) {
                         setFieldValue("shipping_price", event.currentTarget.value);
                       }
                     }}
@@ -673,8 +823,11 @@ const Create: NextPage = () => {
                     type="text"
                     value={values.global_shipping_price}
                     onChange={(event) => {
-                      const currencyRegex = /^[1-9]*(\.[0-9]{0,2})?$/;
-                      if (currencyRegex.test(event.currentTarget.value)) {
+                      const currencyRegex = /^[1-9]+[0-9]*(\.[0-9]{0,2})?$/;
+                      if (
+                        currencyRegex.test(event.currentTarget.value) ||
+                        event.currentTarget.value === ""
+                      ) {
                         setFieldValue("global_shipping_price", event.currentTarget.value);
                       }
                     }}
@@ -682,7 +835,9 @@ const Create: NextPage = () => {
                 </div>
               </>
             )}
-            <h2 className="text-lg font-bold font-display uppercase mt-9 pb-4 mb-4 border-b border-solid border-gray-300">Pricing</h2>
+            <h2 className="text-lg font-bold font-display uppercase mt-9 pb-4 mb-4 border-b border-solid border-gray-300">
+              Pricing
+            </h2>
             <div className="w-2/3 sm:w-1/2 flex items-center justify-between text-md font-semibold mb-2">
               <label htmlFor="price">Price</label>
               {errors.price && touched.price && (
@@ -698,15 +853,17 @@ const Create: NextPage = () => {
                 type="text"
                 value={values.price}
                 onChange={(event) => {
-                  const currencyRegex = /^[1-9]*(\.[0-9]{0,2})?$/;
-                  if (currencyRegex.test(event.currentTarget.value)) {
+                  const currencyRegex = /^[1-9]+[0-9]*(\.[0-9]{0,2})?$/;
+                  if (
+                    currencyRegex.test(event.currentTarget.value) ||
+                    event.currentTarget.value === ""
+                  ) {
                     setFieldValue("price", event.currentTarget.value);
                   }
                 }}
               />
             </div>
-            <div className="flex gap-4 text-md font-bold font-display uppercase border-t border-solid border-gray-300 sm:fixed sm:z-20 sm:w-full sm:px-4 sm:bottom-0 sm:left-0 sm:bg-primary">
-              <div className="w-full h-14 mt-6 mb-12 flex justify-center items-center rounded border border-solid border-secondary">Draft</div>
+            <div className="text-md font-bold font-display uppercase border-t border-solid border-gray-300 sm:fixed sm:z-20 sm:w-full sm:px-4 sm:bottom-0 sm:left-0 sm:bg-primary">
               <LoadingButton
                 className="w-full h-14 mt-6 mb-12 flex justify-center items-center bg-secondary text-primary uppercase rounded border border-solid border-secondary"
                 dark

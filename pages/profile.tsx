@@ -1,26 +1,37 @@
 import WithAuth from "@/components/HOC/WithAuth";
+import { UserProductsDocument } from "@/generated/graphql";
 import { useAppSelector } from "@/redux/hooks";
 import { NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import { FaStar } from "react-icons/fa";
+import { useQuery } from "urql";
 
 const Profile: NextPage = ({}) => {
   const user = useAppSelector((store) => store.auth.user);
+  const [{ data, error }] = useQuery({
+    query: UserProductsDocument,
+    variables: { user_id: user!.id },
+  });
   return (
     <>
       <Head>
         <title>Profile - Bella</title>
       </Head>
       <div className="h-40 mx-4 py-4 border-b border-solid border-gray-300 flex">
-        <div className="h-full aspect-square rounded-full relative overflow-hidden flex-shrink-0">
-          <Image src="/media/utils/blank-profile.webp" alt="profile-picture" fill className="object-cover" />
+        <div className="h-full aspect-square rounded-xl relative overflow-hidden flex-shrink-0">
+          <Image
+            src="/media/utils/blank-profile.webp"
+            alt="profile-picture"
+            fill
+            className="object-cover"
+          />
         </div>
         <div className="pl-4 pt-1 overflow-hidden relative">
-          <h1 className="font-display font-medium text-lg uppercase text-ellipsis whitespace-nowrap overflow-hidden mb-0.5">{`${user!.first_name} ${
-            user!.last_name
-          }`}</h1>
+          <h1 className="font-display font-medium text-lg uppercase text-ellipsis whitespace-nowrap overflow-hidden mb-0.5">{`${
+            user!.first_name
+          } ${user!.last_name}`}</h1>
           <p className="text-sm font-medium mb-1">{`@${user!.username}`}</p>
           <div className="flex items-center gap-1 text-sm font-medium">
             {Array(5)
@@ -61,11 +72,16 @@ const Profile: NextPage = ({}) => {
           <p className="font-medium text-sm break-words">{user!.bio}</p>
         </div>
       )}
-      <div className="mx-4 mt-4 grid grid-cols-3 auto-rows-fr gap-4">
-        <div className="bg-black aspect-square rounded-xl">f</div>
-        <div className="bg-black aspect-square rounded-xl"></div>
-        <div className="bg-black aspect-square rounded-xl"></div>
-        <div className="bg-black aspect-square rounded-xl"></div>
+      <div className="mx-4 mt-4 grid grid-cols-3 auto-rows-fr gap-2">
+        {data?.userProducts!.map((product, index) => (
+          <Link
+            href={`/products/${encodeURIComponent(product.name)}?id=${product.id}`}
+            key={index}
+            className="aspect-square rounded-xl relative overflow-hidden will-change-transform transition-transform duration-500 hover:scale-95"
+          >
+            <Image src={product.images[0]} alt={product.name} fill className="object-cover" />
+          </Link>
+        ))}
       </div>
     </>
   );

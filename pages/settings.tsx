@@ -7,7 +7,7 @@ import Head from "next/head";
 import * as yup from "yup";
 import clsx from "clsx";
 import WithAuth from "@/components/HOC/WithAuth";
-import useSWR from "swr";
+import useSWRImmutable from "swr";
 import { fetcher } from "@/utils/fetcher";
 import { Classifiers, Country } from "@/utils/types";
 import { useMutation } from "urql";
@@ -41,7 +41,10 @@ const VerifyEmailModal: React.FC<VerifyEmailModalProps> = ({ setVisible }) => {
 
   return (
     <div className="w-screen h-screen z-50 fixed top-0 flex justify-center items-center">
-      <div onClick={() => !disabled && setVisible(false)} className="w-full h-full absolute bg-secondary opacity-50" />
+      <div
+        onClick={() => !disabled && setVisible(false)}
+        className="w-full h-full absolute bg-secondary opacity-50"
+      />
       <div className="w-11/12 sm:w-10/12 p-6 z-10 bg-primary flex flex-col items-center rounded-xl">
         <Formik
           initialValues={{
@@ -50,7 +53,10 @@ const VerifyEmailModal: React.FC<VerifyEmailModalProps> = ({ setVisible }) => {
           validationSchema={yup.object().shape({
             token: yup.string().min(6, "Token must be 6 Chars").required("Required"),
           })}
-          onSubmit={async (values: { token: string }, { setErrors }: FormikHelpers<{ token: string }>) => {
+          onSubmit={async (
+            values: { token: string },
+            { setErrors }: FormikHelpers<{ token: string }>
+          ) => {
             setDisabled(true);
             setVerifyResponse(null);
             const response = await verifyEmail({ token: values.token });
@@ -71,9 +77,13 @@ const VerifyEmailModal: React.FC<VerifyEmailModalProps> = ({ setVisible }) => {
                 Verify Email
                 {verifyResponse && (
                   <span
-                    className={`${verifyResponse.ok ? "bg-green-100" : "bg-red-100"} text-xs sm:text-sm font-medium font-sans normal-case ${
+                    className={`${
+                      verifyResponse.ok ? "bg-green-100" : "bg-red-100"
+                    } text-xs sm:text-sm font-medium font-sans normal-case ${
                       verifyResponse.ok ? "text-green-500" : "text-red-500"
-                    } border border-solid ${verifyResponse.ok ? "border-green-500" : "border-red-500"} px-2 py-0.5 rounded`}
+                    } border border-solid ${
+                      verifyResponse.ok ? "border-green-500" : "border-red-500"
+                    } px-2 py-0.5 rounded`}
                   >
                     {verifyResponse.message}
                   </span>
@@ -144,7 +154,10 @@ interface SecurityValues {
 
 const Settings: NextPage = () => {
   const user = useAppSelector((store) => store.auth.user);
-  const { data } = useSWR<Classifiers>("/api/classifiers", fetcher, { revalidateIfStale: false });
+  const { data } = useSWRImmutable<Classifiers>("/api/classifiers", fetcher, {
+    revalidateIfStale: false,
+    revalidateOnFocus: false,
+  });
   const dispatch = useAppDispatch();
   const [, changeUsername] = useMutation(ChangeUsernameDocument);
   const [, changeEmail] = useMutation(ChangeEmailDocument);
@@ -154,7 +167,7 @@ const Settings: NextPage = () => {
   const [, changePassword] = useMutation(ChangePasswordDocument);
   const [securityResponse, setSecurityResponse] = useState<BasicResponse | null>(null);
   const [showVerifyEmailModal, setShowVerifyEmailModal] = useState(false);
-
+  // add clsx
   return (
     <>
       <Head>
@@ -170,7 +183,9 @@ const Settings: NextPage = () => {
         </button>
       )}
       <div className="pt-10 pb-20 px-4">
-        <h1 className="text-2xl font-black font-display uppercase pb-6 border-b border-solid border-gray-300">Edit Profile</h1>
+        <h1 className="text-2xl font-black font-display uppercase pb-6 border-b border-solid border-gray-300">
+          Edit Profile
+        </h1>
         <Formik
           initialValues={{
             username: "",
@@ -184,7 +199,10 @@ const Settings: NextPage = () => {
               .matches(/^[A-Za-z0-9]*$/, "Only ABC's & Numbers")
               .max(20, "Max 20 Chars"),
           })}
-          onSubmit={async (values: GeneralValues, { setErrors, resetForm }: FormikHelpers<GeneralValues>) => {
+          onSubmit={async (
+            values: GeneralValues,
+            { setErrors, resetForm }: FormikHelpers<GeneralValues>
+          ) => {
             if (values.username) {
               const response = await changeUsername({ username: values.username });
               if (response.data?.changeUsername.errors) {
@@ -218,9 +236,13 @@ const Settings: NextPage = () => {
                 General
                 {generalResponse && (
                   <span
-                    className={`${generalResponse.ok ? "bg-green-100" : "bg-red-100"} text-xs sm:text-sm font-medium font-sans normal-case ${
+                    className={`${
+                      generalResponse.ok ? "bg-green-100" : "bg-red-100"
+                    } text-xs sm:text-sm font-medium font-sans normal-case ${
                       generalResponse.ok ? "text-green-500" : "text-red-500"
-                    } border border-solid ${generalResponse.ok ? "border-green-500" : "border-red-500"} px-2 py-0.5 rounded`}
+                    } border border-solid ${
+                      generalResponse.ok ? "border-green-500" : "border-red-500"
+                    } px-2 py-0.5 rounded`}
                   >
                     {generalResponse.message}
                   </span>
@@ -281,9 +303,14 @@ const Settings: NextPage = () => {
               return false;
             }),
             new_password: yup.string().min(8, "Min 8 Chars Required").required("Required"),
-            confirm_password: yup.string().oneOf([yup.ref("new_password"), undefined], "Does Not Match"),
+            confirm_password: yup
+              .string()
+              .oneOf([yup.ref("new_password"), undefined], "Does Not Match"),
           })}
-          onSubmit={async (values: SecurityValues, { setErrors, resetForm }: FormikHelpers<SecurityValues>) => {
+          onSubmit={async (
+            values: SecurityValues,
+            { setErrors, resetForm }: FormikHelpers<SecurityValues>
+          ) => {
             const request = {
               changePasswordOptions: {
                 old_password: values.old_password,
@@ -308,9 +335,13 @@ const Settings: NextPage = () => {
                 Security
                 {securityResponse && (
                   <span
-                    className={`${securityResponse.ok ? "bg-green-100" : "bg-red-100"} text-xs sm:text-sm font-medium font-sans normal-case ${
+                    className={`${
+                      securityResponse.ok ? "bg-green-100" : "bg-red-100"
+                    } text-xs sm:text-sm font-medium font-sans normal-case ${
                       securityResponse.ok ? "text-green-500" : "text-red-500"
-                    } border border-solid ${securityResponse.ok ? "border-green-500" : "border-red-500"} px-2 py-0.5 rounded`}
+                    } border border-solid ${
+                      securityResponse.ok ? "border-green-500" : "border-red-500"
+                    } px-2 py-0.5 rounded`}
                   >
                     {securityResponse.message}
                   </span>
@@ -408,9 +439,13 @@ const Settings: NextPage = () => {
                 About
                 {aboutResponse && (
                   <span
-                    className={`${aboutResponse.ok ? "bg-green-100" : "bg-red-100"} text-xs sm:text-sm font-medium font-sans normal-case ${
+                    className={`${
+                      aboutResponse.ok ? "bg-green-100" : "bg-red-100"
+                    } text-xs sm:text-sm font-medium font-sans normal-case ${
                       aboutResponse.ok ? "text-green-500" : "text-red-500"
-                    } border border-solid ${aboutResponse.ok ? "border-green-500" : "border-red-500"} px-2 py-0.5 rounded`}
+                    } border border-solid ${
+                      aboutResponse.ok ? "border-green-500" : "border-red-500"
+                    } px-2 py-0.5 rounded`}
                   >
                     {aboutResponse.message}
                   </span>
@@ -456,7 +491,9 @@ const Settings: NextPage = () => {
                 name="bio"
                 as="textarea"
               />
-              <p className="w-full text-right text-sm text-gray-500">{values.bio ? 500 - values.bio.length : 500} Chars Left</p>
+              <p className="w-full text-right text-sm text-gray-500">
+                {values.bio ? 500 - values.bio.length : 500} Chars Left
+              </p>
               <div className="flex items-center justify-between text-md font-semibold mb-2">
                 <label htmlFor="country">Country</label>
                 {errors.country && touched.country && (
@@ -469,10 +506,14 @@ const Settings: NextPage = () => {
                 className="font-sans text-md font-medium mb-6"
                 classNames={{
                   control: () => "p-3 border border-solid border-secondary rounded",
-                  menu: () => "p-2 mt-2 bg-primary border border-solid border-secondary rounded shadow-2xl",
+                  menu: () =>
+                    "p-2 mt-2 bg-primary border border-solid border-secondary rounded shadow-2xl",
                   menuList: () => "flex flex-col gap-2",
                   option: ({ isSelected }) =>
-                    clsx("py-2 px-3 hover:bg-gray-300 hover:text-secondary rounded", isSelected && "bg-secondary text-primary"),
+                    clsx(
+                      "py-2 px-3 hover:bg-gray-300 hover:text-secondary rounded",
+                      isSelected && "bg-secondary text-primary"
+                    ),
                 }}
                 defaultValue={{ value: values.country, label: values.country }}
                 unstyled
@@ -486,7 +527,10 @@ const Settings: NextPage = () => {
                     setFieldValue("country", "");
                   }
                 }}
-                options={data?.countries.map((country: Country) => ({ value: country.name, label: country.name }))}
+                options={data?.countries.map((country: Country) => ({
+                  value: country.name,
+                  label: country.name,
+                }))}
               />
               <LoadingButton
                 className="w-full h-14 flex justify-center items-center bg-secondary text-primary rounded text-md font-bold font-display uppercase border border-solid border-secondary"

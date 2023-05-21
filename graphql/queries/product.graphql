@@ -1,0 +1,43 @@
+query Product($id: Float!) {
+  Product(id: $id) {
+    id
+    images
+    name
+    description
+    department
+    category
+    subcategory
+    condition
+    quantity
+    size
+    designer
+    colour
+    source
+    era
+    style
+    country
+    offer_free_shipping
+    shipping_price
+    offer_global_shipping
+    global_shipping_price
+    price
+    sold
+    creator_id
+    creator {
+      id
+      verified
+      oauth_user
+      email
+      username
+      token_version
+      first_name
+      last_name
+      bio
+      country
+      created_at
+      updated_at
+    }
+    created_at
+    updated_at
+  }
+}

@@ -1,8 +1,6 @@
-"use client";
-
 import Link from "next/link";
 import { Dispatch, SetStateAction, useState } from "react";
-import { FiSearch, FiMail, FiUser, FiShoppingBag, FiArrowRight, FiHeart, FiHome } from "react-icons/fi";
+import { FiSearch, FiUser, FiShoppingBag, FiArrowRight, FiPlusSquare } from "react-icons/fi";
 import { GrMenu } from "react-icons/gr";
 import { useMutation } from "urql";
 import { LogoutDocument } from "@/generated/graphql";
@@ -42,19 +40,18 @@ const SideMenu: React.FC<SideMenuProps> = ({ setVisible, showAuth, authView }) =
       >
         <h1 className="font-display font-black text-4xl my-6 ml-6 uppercase">Bella</h1>
         {isAuthenticated ? (
-          <div className="mx-6 mb-6 grid grid-cols-2 grid-rows-2 text-md sm:text-lg uppercase font-medium font-display">
+          <div className="mx-6 mb-6 grid grid-cols-2 grid-rows-1 text-md sm:text-lg uppercase font-medium font-display">
             <Link className="flex items-center py-4" href="/profile">
               <FiUser className="text-2xl sm:text-3xl" />
               <span className="ml-2 sm:ml-4">User</span>
             </Link>
-            <Link onClick={() => setVisible(false)} className="flex items-center py-4" href="/create">
-              <FiHome className="text-2xl sm:text-3xl" /> <span className="ml-2 sm:ml-4">Store</span>
-            </Link>
-            <Link className="flex items-center py-4" href="/profile">
-              <FiHeart className="text-2xl sm:text-3xl" /> <span className="ml-2 sm:ml-4">Likes</span>
-            </Link>
-            <Link className="flex items-center py-4" href="/profile">
-              <FiMail className="text-2xl sm:text-3xl" /> <span className="ml-2 sm:ml-4">Mail</span>
+            <Link
+              onClick={() => setVisible(false)}
+              className="flex items-center py-4"
+              href="/products/create"
+            >
+              <FiPlusSquare className="text-2xl sm:text-3xl" />
+              <span className="ml-2 sm:ml-4">Create</span>
             </Link>
           </div>
         ) : (
@@ -81,23 +78,43 @@ const SideMenu: React.FC<SideMenuProps> = ({ setVisible, showAuth, authView }) =
             </button>
           </div>
         )}
-        <h2 className="mx-6 py-6 font-bold text-xl uppercase border-t border-solid border-gray-300">Browse Inventory</h2>
-        <Link className="mx-6 py-4 flex justify-between items-center font-medium text-md border-b border-solid border-gray-300" href="/profile">
+        <h2 className="mx-6 py-6 font-bold text-xl uppercase border-t border-solid border-gray-300">
+          Browse Inventory
+        </h2>
+        <Link
+          className="mx-6 py-4 flex justify-between items-center font-medium text-md border-b border-solid border-gray-300"
+          href="/profile"
+        >
           Designers <FiArrowRight className="text-2xl" />
         </Link>
-        <Link className="mx-6 py-4 flex justify-between items-center font-medium text-md border-b border-solid border-gray-300" href="/profile">
+        <Link
+          className="mx-6 py-4 flex justify-between items-center font-medium text-md border-b border-solid border-gray-300"
+          href="/profile"
+        >
           Menswear <FiArrowRight className="text-2xl" />
         </Link>
-        <Link className="mx-6 py-4 flex justify-between items-center font-medium text-md border-b border-solid border-gray-300" href="/profile">
+        <Link
+          className="mx-6 py-4 flex justify-between items-center font-medium text-md border-b border-solid border-gray-300"
+          href="/profile"
+        >
           Womenswear <FiArrowRight className="text-2xl" />
         </Link>
-        <Link className="mx-6 py-4 flex justify-between items-center font-medium text-md border-b border-solid border-gray-300" href="/profile">
+        <Link
+          className="mx-6 py-4 flex justify-between items-center font-medium text-md border-b border-solid border-gray-300"
+          href="/profile"
+        >
           Footwear <FiArrowRight className="text-2xl" />
         </Link>
-        <Link className="mx-6 py-4 flex justify-between items-center font-medium text-md border-b border-solid border-gray-300" href="/profile">
+        <Link
+          className="mx-6 py-4 flex justify-between items-center font-medium text-md border-b border-solid border-gray-300"
+          href="/profile"
+        >
           Accessories <FiArrowRight className="text-2xl" />
         </Link>
-        <Link className="mx-6 py-4 mb-10 flex justify-between items-center font-medium text-md border-b border-solid border-gray-300" href="/profile">
+        <Link
+          className="mx-6 py-4 mb-10 flex justify-between items-center font-medium text-md border-b border-solid border-gray-300"
+          href="/profile"
+        >
           Jewelry <FiArrowRight className="text-2xl" />
         </Link>
         <Link className="ml-6 mb-6 text-sm uppercase" href="/profile">
@@ -152,7 +169,11 @@ const Navbar: React.FC = () => {
           </div>
           <div className="w-1/2 font-medium justify-between hidden items-center mx-[1vmax] border-[0.1vmin] border-solid border-secondary rounded relative">
             <FiSearch className="text-[1.25vmax] ml-[0.5vmax]" />
-            <input type="text" placeholder="Search" className="w-full mx-[0.5vmax] bg-transparent text-[0.75vmax] focus:outline-none" />
+            <input
+              type="text"
+              placeholder="Search"
+              className="w-full mx-[0.5vmax] bg-transparent text-[0.75vmax] focus:outline-none"
+            />
             <button className="cursor-pointer py-[0.25vmax] px-[0.75vmax] flex items-center uppercase text-[0.7vmax] font-display bg-secondary text-primary">
               Search
             </button>
@@ -163,15 +184,14 @@ const Navbar: React.FC = () => {
             </Link>
             {isAuthenticated === null ? null : isAuthenticated ? (
               <>
-                <Link className="hidden sm:block ml-6 text-3xl" href="/messages">
-                  <FiMail />
-                </Link>
-                <Link className="ml-6 text-3xl" href="/profile">
+                <Link className="text-3xl" href="/profile">
                   <FiUser />
                 </Link>
                 <Link className="ml-6 text-3xl relative" href="/bag">
                   <FiShoppingBag />
-                  <span className="absolute -top-1 -right-1 px-1 pt-0.5 bg-red-500 text-primary text-xs rounded-md">9+</span>
+                  <span className="absolute -top-1 -right-1 px-1 pt-0.5 bg-red-500 text-primary text-xs rounded-md">
+                    9+
+                  </span>
                 </Link>
               </>
             ) : (
@@ -237,7 +257,13 @@ const Navbar: React.FC = () => {
         />
       )}
       <AnimatePresence>
-        {showSideMenu && <SideMenu setVisible={setShowSideMenu} showAuth={setShowAuthModal} authView={setAuthModalView} />}
+        {showSideMenu && (
+          <SideMenu
+            setVisible={setShowSideMenu}
+            showAuth={setShowAuthModal}
+            authView={setAuthModalView}
+          />
+        )}
       </AnimatePresence>
     </>
   );
