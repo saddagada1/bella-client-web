@@ -1,0 +1,11 @@
+fragment AuthResponseObject on AuthResponse {
+  errors {
+    ...FieldErrorObject
+  }
+  user {
+    ...UserObject
+  }
+  auth {
+    ...AuthObject
+  }
+}

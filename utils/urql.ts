@@ -6,6 +6,16 @@ import { store } from "../redux/store";
 import { calcExpiresIn, calcIsExpiring } from "./calc";
 import { fetchRefreshToken } from "./axios";
 import Router from "next/router";
+import { Cache, QueryInput } from "@urql/exchange-graphcache";
+
+function updateQuery<Result, Query>(
+  cache: Cache,
+  qi: QueryInput,
+  result: any,
+  fn: (r: Result, q: Query) => Query
+) {
+  return cache.updateQuery(qi, (data) => fn(result, data as any) as any);
+}
 
 export const createUrqlClient = (ssrExchange: SSRExchange) => ({
   url: process.env.GRAPHQL_SERVER_URL!,
@@ -13,7 +23,56 @@ export const createUrqlClient = (ssrExchange: SSRExchange) => ({
     credentials: "include" as const,
   },
   exchanges: [
-    cacheExchange(),
+    cacheExchange({
+      updates: {
+        Mutation: {
+          logout: (_result, args, cache, info) => {
+            const key = "Query";
+            cache.inspectFields(key).forEach((field) => {
+              cache.invalidate(key, field.fieldKey);
+            });
+          },
+          follow: (_result, args, cache, info) => {
+            const key = "Query";
+            cache
+              .inspectFields(key)
+              .filter((field) => field.fieldName === "userByUsername")
+              .forEach((field) => {
+                cache.invalidate(key, field.fieldKey);
+              });
+          },
+          createProduct: (_result, args, cache, info) => {
+            const { auth } = store.getState();
+            const key = "Query";
+            cache
+              .inspectFields(key)
+              .filter((field) => field.fieldName === "userByUsername")
+              .forEach((field) => {
+                if (field.arguments!.username === auth.user!.username) {
+                  cache.invalidate(key, field.fieldKey);
+                }
+              });
+          },
+          like: (_result, args, cache, info) => {
+            const key = "Query";
+            cache
+              .inspectFields(key)
+              .filter((field) => field.fieldName === "product")
+              .forEach((field) => {
+                if (field.arguments!.id === args!.id) {
+                  cache.invalidate(key, field.fieldKey);
+                }
+              });
+          },
+          addProductToCart: (_result, args, cache, info) => {
+            cache.invalidate("Query", "carts");
+          },
+          removeProductFromCart: (_result, args, cache, info) => {
+            cache.invalidate("Query", "carts");
+          },
+        },
+      },
+    }),
     ssrExchange,
     authExchange(async () => {
       return {

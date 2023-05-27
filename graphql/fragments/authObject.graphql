@@ -1,0 +1,4 @@
+fragment AuthObject on Auth {
+  access_token
+  expires_in
+}

@@ -1,0 +1,9 @@
+fragment CartItemObject on CartItem {
+  id
+  name
+  price
+  shipping_price
+  images
+  product_id
+  cart_id
+}

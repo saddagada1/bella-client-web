@@ -2,14 +2,15 @@ import { NextPage } from "next";
 import { createUrqlClient } from "@/utils/urql";
 import Head from "next/head";
 import React, { useState } from "react";
-import { useQuery } from "urql";
+import { useMutation, useQuery } from "urql";
 import { withUrqlClient } from "next-urql";
-import { FaStar } from "react-icons/fa";
+import { FaHeart, FaStar } from "react-icons/fa";
 import Image from "next/image";
-import { ProductDocument } from "@/generated/graphql";
+import { LikeDocument, ProductDocument } from "@/generated/graphql";
 import Link from "next/link";
 import { FiChevronLeft, FiChevronRight, FiHeart } from "react-icons/fi";
 import clsx from "clsx";
+import { useAppSelector } from "@/redux/hooks";
 
 interface ProductProps {
   product: string;
@@ -19,9 +20,9 @@ interface ProductProps {
 const Product: NextPage<ProductProps> = ({ product, id }) => {
   const [{ data, error }] = useQuery({ query: ProductDocument, variables: { id: parseInt(id) } });
   const [imageIndex, setImageIndex] = useState(0);
-
-  if (error) {
-  }
+  const [, like] = useMutation(LikeDocument);
+  // const [, addProductToBag] = useMutation(AddProductToCartDocument);
+  const user = useAppSelector((store) => store.auth.user);
 
   return (
     <>
@@ -33,13 +34,13 @@ const Product: NextPage<ProductProps> = ({ product, id }) => {
           Home <FiChevronRight />
         </Link>
         <Link className="flex items-center hover:underline" href="/">
-          {data?.Product.department} <FiChevronRight />
+          {data?.product.department} <FiChevronRight />
         </Link>
         <Link className="flex items-center hover:underline" href="/">
-          {data?.Product.category} <FiChevronRight />
+          {data?.product.category} <FiChevronRight />
         </Link>
         <Link className="hover:underline" href="/">
-          {data?.Product.subcategory}
+          {data?.product.subcategory}
         </Link>
       </div>
       <div className="h-16 mx-4 pt-2 pb-3 border-b border-solid border-gray-300 flex">
@@ -53,10 +54,10 @@ const Product: NextPage<ProductProps> = ({ product, id }) => {
         </div>
         <div className="pl-4 flex flex-col justify-between overflow-hidden relative">
           <Link
-            href={`/store/${data?.Product.creator.username}`}
+            href={`/${data?.product.store.user.username}`}
             className="font-display font-medium text-sm uppercase truncate mb-0.5"
           >
-            {data?.Product.creator.username}
+            {data?.product.store.user.username}
           </Link>
           <div className="flex items-center gap-1 text-sm font-medium">
             {Array(5)
@@ -71,17 +72,17 @@ const Product: NextPage<ProductProps> = ({ product, id }) => {
       <div className="py-4 mx-4 border-b border-solid border-gray-300">
         <div className="w-full flex justify-center items-center aspect-square mb-4 rounded-xl relative overflow-hidden">
           <Image
-            src={data?.Product.images[imageIndex] as string}
-            alt={data?.Product.name as string}
+            src={data?.product.images[imageIndex] as string}
+            alt={data?.product.name as string}
             fill
             className="object-cover"
           />
-          {data && data.Product.images.length > 1 && (
+          {data && data.product.images.length > 1 && (
             <>
               <button
                 onClick={() => {
                   if (imageIndex === 0) {
-                    setImageIndex(data!.Product.images.length - 1);
+                    setImageIndex(data!.product.images.length - 1);
                   } else {
                     setImageIndex(imageIndex - 1);
                   }
@@ -92,7 +93,7 @@ const Product: NextPage<ProductProps> = ({ product, id }) => {
               </button>
               <button
                 onClick={() => {
-                  if (imageIndex === data!.Product.images.length - 1) {
+                  if (imageIndex === data!.product.images.length - 1) {
                     setImageIndex(0);
                   } else {
                     setImageIndex(imageIndex + 1);
@@ -103,7 +104,7 @@ const Product: NextPage<ProductProps> = ({ product, id }) => {
                 <FiChevronRight />
               </button>
               <div className="flex gap-2 bottom-2 absolute">
-                {data?.Product.images.map((_, index) => (
+                {data?.product.images.map((_, index) => (
                   <span
                     key={index}
                     className={clsx(
@@ -117,88 +118,102 @@ const Product: NextPage<ProductProps> = ({ product, id }) => {
           )}
         </div>
         <div className="flex justify-between mb-6">
-          <button className="text-3xl">
-            <FiHeart />
+          <button
+            onClick={async () => {
+              await like({ id: parseInt(id) });
+            }}
+            className="text-3xl"
+          >
+            {data?.product.likes.find((like) => like.user_id === user?.id) ? (
+              <FaHeart className="text-red-500" />
+            ) : (
+              <FiHeart />
+            )}
           </button>
           <p className="text-md font-medium">
-            <span className="font-display">20</span> likes
+            <span className="font-display">{data?.product.likes.length}</span> likes
           </p>
         </div>
         <div className="bg-gray-200 rounded p-3 flex items-center justify-between font-semibold text-md mb-4">
           <p>Size</p>
           <span className="flex-1 border-b border-solid border-gray-300 mx-4" />
-          <p>{data?.Product.size}</p>
+          <p>{data?.product.size}</p>
         </div>
         <div className="bg-gray-200 rounded p-3 flex items-center justify-between font-semibold text-md mb-4">
           <p>Condition</p>
           <span className="flex-1 border-b border-solid border-gray-300 mx-4" />
-          <p>{data?.Product.condition}</p>
+          <p>{data?.product.condition}</p>
         </div>
-        {data?.Product.designer && (
+        {data?.product.designer && (
           <div className="bg-gray-200 rounded p-3 flex items-center justify-between font-semibold text-md mb-4">
             <p>Designer</p>
             <span className="flex-1 border-b border-solid border-gray-300 mx-4" />
-            <p>{data?.Product.designer}</p>
+            <p>{data?.product.designer}</p>
           </div>
         )}
-        {data?.Product.colour && (
+        {data?.product.colour && (
           <div className="bg-gray-200 rounded p-3 flex items-center justify-between font-semibold text-md mb-4">
             <p>Colour</p>
             <span className="flex-1 border-b border-solid border-gray-300 mx-4" />
-            <p>{data?.Product.colour}</p>
+            <p>{data?.product.colour}</p>
           </div>
         )}
-        {data?.Product.source && (
+        {data?.product.source && (
           <div className="bg-gray-200 rounded p-3 flex items-center justify-between font-semibold text-md mb-4">
             <p>Source</p>
             <span className="flex-1 border-b border-solid border-gray-300 mx-4" />
-            <p>{data?.Product.source}</p>
+            <p>{data?.product.source}</p>
           </div>
         )}
-        {data?.Product.era && (
+        {data?.product.era && (
           <div className="bg-gray-200 rounded p-3 flex items-center justify-between font-semibold text-md mb-4">
             <p>Era</p>
             <span className="flex-1 border-b border-solid border-gray-300 mx-4" />
-            <p>{data?.Product.era}</p>
+            <p>{data?.product.era}</p>
           </div>
         )}
-        {data?.Product.style && (
+        {data?.product.style && (
           <div className="bg-gray-200 rounded p-3 flex items-center justify-between font-semibold text-md mb-4">
             <p>Style</p>
             <span className="flex-1 border-b border-solid border-gray-300 mx-4" />
-            <p>{data?.Product.style}</p>
+            <p>{data?.product.style}</p>
           </div>
         )}
         <p className="font-medium text-sm text-right">{`Listed ${new Date(
-          parseFloat(data?.Product.created_at as string)
+          parseFloat(data?.product.created_at as string)
         ).toDateString()}`}</p>
       </div>
       <div className="mx-4 pt-4 pb-20">
         <h1 className="font-display font-medium text-xl uppercase break-words mb-4">
-          {data?.Product.name}
+          {data?.product.name}
         </h1>
-        <p className="font-medium text-md break-words mb-4">{data?.Product.description}</p>
+        <p className="font-medium text-md break-words mb-4">{data?.product.description}</p>
         <div className="bg-gray-200 rounded p-3 flex items-center justify-between font-semibold text-md mb-4">
           <p>Shipping</p>
           <span className="flex-1 border-b border-solid border-gray-300 mx-4" />
-          <p>CA$ {data?.Product.shipping_price}</p>
+          <p>CA$ {data?.product.shipping_price}</p>
         </div>
-        {data?.Product.offer_global_shipping && (
+        {data?.product.offer_global_shipping && (
           <div className="bg-gray-200 rounded p-3 flex items-center justify-between font-semibold text-md mb-4">
             <p>Global Shipping</p>
             <span className="flex-1 border-b border-solid border-gray-300 mx-4" />
-            <p>CA$ {data?.Product.global_shipping_price}</p>
+            <p>CA$ {data?.product.global_shipping_price}</p>
           </div>
         )}
         <div className="bg-gray-200 rounded p-3 flex items-center justify-between font-semibold text-md mb-8">
           <p>Country</p>
           <span className="flex-1 border-b border-solid border-gray-300 mx-4" />
-          <p>{data?.Product.country}</p>
+          <p>{data?.product.country}</p>
         </div>
       </div>
       <div className="flex items-center justify-between text-md font-bold font-display uppercase border-t border-solid border-gray-300 sm:fixed sm:z-20 sm:w-full sm:px-4 sm:bottom-0 sm:left-0 sm:bg-primary">
-        <p className="text-xl">CA$ {data?.Product.price}</p>
-        <button className="w-fit h-12 my-4 px-4 flex justify-center items-center bg-secondary text-primary uppercase rounded border border-solid border-secondary">
+        <p className="text-xl">CA$ {data?.product.price}</p>
+        <button
+          // onClick={async () => {
+          //   await addProductToBag({ id: parseInt(id) });
+          // }}
+          className="w-fit h-12 my-4 px-4 flex justify-center items-center bg-secondary text-primary uppercase rounded border border-solid border-secondary"
+        >
           Add to Bag
         </button>
       </div>

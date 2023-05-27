@@ -1,6 +1,6 @@
 import axiosRetry from "axios-retry";
 import axios, { AxiosError } from "axios";
-import { User } from "../generated/graphql";
+import { UserObjectFragment } from "../generated/graphql";
 
 axiosRetry(axios, {
   retries: 3,
@@ -22,7 +22,7 @@ interface RefreshTokenResponse {
   ok: boolean;
   access_token: string;
   expires_in: number;
-  user: User;
+  user: UserObjectFragment;
 }
 
 export const fetchRefreshToken = async () => {

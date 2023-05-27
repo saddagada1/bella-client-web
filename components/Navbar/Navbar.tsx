@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { Dispatch, SetStateAction, useState } from "react";
-import { FiSearch, FiUser, FiShoppingBag, FiArrowRight, FiPlusSquare } from "react-icons/fi";
+import { FiSearch, FiUser, FiShoppingBag, FiArrowRight, FiHome } from "react-icons/fi";
 import { GrMenu } from "react-icons/gr";
-import { useMutation } from "urql";
+import { useMutation, useQuery } from "urql";
 import { LogoutDocument } from "@/generated/graphql";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { resetAuthentication, setAuthentication } from "@/redux/slices/authSlice";
@@ -18,7 +18,7 @@ interface SideMenuProps {
 }
 
 const SideMenu: React.FC<SideMenuProps> = ({ setVisible, showAuth, authView }) => {
-  const isAuthenticated = useAppSelector((store) => store.auth.isAuthenticated);
+  const auth = useAppSelector((store) => store.auth);
   const dispatch = useAppDispatch();
   const [, logout] = useMutation(LogoutDocument);
 
@@ -39,19 +39,23 @@ const SideMenu: React.FC<SideMenuProps> = ({ setVisible, showAuth, authView }) =
         className="w-11/12 sm:w-5/6 h-full z-10 bg-primary shadow-2xl flex flex-col relative overflow-scroll will-change-transform"
       >
         <h1 className="font-display font-black text-4xl my-6 ml-6 uppercase">Bella</h1>
-        {isAuthenticated ? (
+        {auth.isAuthenticated ? (
           <div className="mx-6 mb-6 grid grid-cols-2 grid-rows-1 text-md sm:text-lg uppercase font-medium font-display">
-            <Link className="flex items-center py-4" href="/profile">
+            <Link
+              onClick={() => setVisible(false)}
+              className="flex items-center py-4"
+              href={`/${auth.user!.username}`}
+            >
               <FiUser className="text-2xl sm:text-3xl" />
               <span className="ml-2 sm:ml-4">User</span>
             </Link>
             <Link
               onClick={() => setVisible(false)}
               className="flex items-center py-4"
-              href="/products/create"
+              href="/store"
             >
-              <FiPlusSquare className="text-2xl sm:text-3xl" />
-              <span className="ml-2 sm:ml-4">Create</span>
+              <FiHome className="text-2xl sm:text-3xl" />
+              <span className="ml-2 sm:ml-4">Store</span>
             </Link>
           </div>
         ) : (
@@ -126,7 +130,7 @@ const SideMenu: React.FC<SideMenuProps> = ({ setVisible, showAuth, authView }) =
         <Link className="ml-6 mb-10 text-sm uppercase" href="/profile">
           About
         </Link>
-        {isAuthenticated && (
+        {auth.isAuthenticated && (
           <button
             onClick={async () => {
               const response = await logout({});
@@ -151,9 +155,10 @@ const Navbar: React.FC = () => {
   const [authModalView, setAuthModalView] = useState("");
   const [showSideMenu, setShowSideMenu] = useState(false);
   const dispatch = useAppDispatch();
-  const isAuthenticated = useAppSelector((store) => store.auth.isAuthenticated);
+  const auth = useAppSelector((store) => store.auth);
   const router = useRouter();
   const [query, setQuery] = useState("");
+  // const [{ data, error }] = useQuery({ query: CartsDocument, pause: !auth.isAuthenticated });
 
   return (
     <>
@@ -182,15 +187,15 @@ const Navbar: React.FC = () => {
             <Link className="hidden" href="/shop">
               Shop
             </Link>
-            {isAuthenticated === null ? null : isAuthenticated ? (
+            {auth.isAuthenticated === null ? null : auth.isAuthenticated ? (
               <>
-                <Link className="text-3xl" href="/profile">
+                <Link className="text-3xl" href={`/${auth.user!.username}`}>
                   <FiUser />
                 </Link>
                 <Link className="ml-6 text-3xl relative" href="/bag">
                   <FiShoppingBag />
                   <span className="absolute -top-1 -right-1 px-1 pt-0.5 bg-red-500 text-primary text-xs rounded-md">
-                    9+
+                    0
                   </span>
                 </Link>
               </>
@@ -230,7 +235,7 @@ const Navbar: React.FC = () => {
             <FiSearch className="text-lg ml-3 flex-shrink-0 text-gray-400" />
             <input
               onChange={(event) => setQuery(event.currentTarget.value)}
-              onKeyDown={(event) => (event.key === "Enter" ? router.push("/store/" + query) : null)}
+              onKeyDown={(event) => (event.key === "Enter" ? router.push("/" + query) : null)}
               type="text"
               placeholder="Search for items, designers or styles..."
               className="w-full mx-3 bg-transparent focus:outline-none"

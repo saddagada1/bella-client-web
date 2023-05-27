@@ -1,12 +1,12 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { User } from "../../generated/graphql";
+import { UserObjectFragment } from "../../generated/graphql";
 import { RootState } from "../store";
 
 interface AuthState {
   isAuthenticated: boolean | null;
   access_token: string | null;
   expires_in: string | null;
-  user: User | null;
+  user: UserObjectFragment | null;
 }
 
 const initialState: AuthState = {
@@ -26,7 +26,7 @@ const authSlice = createSlice({
         (state.expires_in = action.payload.expires_in),
         (state.user = action.payload.user);
     },
-    setUser(state, action: PayloadAction<{ user: User | null }>) {
+    setUser(state, action: PayloadAction<{ user: UserObjectFragment | null }>) {
       state.user = action.payload.user;
     },
     resetAuthentication(state) {

@@ -1,4 +1,10 @@
-import { AuthResponse, RegisterDocument, RegisterWithGoogleDocument, LoginDocument, LoginWithGoogleDocument } from "@/generated/graphql";
+import {
+  RegisterDocument,
+  RegisterWithGoogleDocument,
+  LoginDocument,
+  LoginWithGoogleDocument,
+  AuthResponseObjectFragment,
+} from "@/generated/graphql";
 import { toErrorMap } from "@/utils/toErrorMap";
 import { trimString } from "@/utils/trimString";
 import { useGoogleLogin } from "@react-oauth/google";
@@ -23,7 +29,7 @@ interface SignUpValues {
 interface SignUpWithEmailProps {
   setDisabled: Dispatch<SetStateAction<boolean>>;
   setEmail: Dispatch<SetStateAction<boolean>>;
-  onAuth: (response: AuthResponse) => void;
+  onAuth: (response: AuthResponseObjectFragment) => void;
 }
 
 const SignUpWithEmail: React.FC<SignUpWithEmailProps> = ({ setEmail, onAuth, setDisabled }) => {
@@ -76,7 +82,10 @@ const SignUpWithEmail: React.FC<SignUpWithEmailProps> = ({ setEmail, onAuth, set
       {({ errors, touched, isSubmitting }) => (
         <Form className="w-full">
           <h1 className="text-2xl flex items-center font-bold font-display uppercase pb-2 mb-4 border-b border-solid border-gray-300">
-            <BiArrowBack onClick={() => (stepTwo ? setStepTwo(false) : setEmail(false))} className="cursor-pointer text-3xl mr-4 flex-shrink-0" />
+            <BiArrowBack
+              onClick={() => (stepTwo ? setStepTwo(false) : setEmail(false))}
+              className="cursor-pointer text-3xl mr-4 flex-shrink-0"
+            />
             Sign Up
           </h1>
           {!stepTwo ? (
@@ -176,7 +185,14 @@ const SignUpWithEmail: React.FC<SignUpWithEmailProps> = ({ setEmail, onAuth, set
           {!stepTwo ? (
             <div
               onClick={() => {
-                if (touched.email && touched.password && touched.confirmPassword && !errors.email && !errors.password && !errors.confirmPassword) {
+                if (
+                  touched.email &&
+                  touched.password &&
+                  touched.confirmPassword &&
+                  !errors.email &&
+                  !errors.password &&
+                  !errors.confirmPassword
+                ) {
                   setStepTwo(true);
                 }
               }}
@@ -210,7 +226,7 @@ interface SignUpHomeProps {
   setDisabled: Dispatch<SetStateAction<boolean>>;
   setEmail: Dispatch<SetStateAction<boolean>>;
   setView: Dispatch<SetStateAction<string>>;
-  onAuth: (response: AuthResponse) => void;
+  onAuth: (response: AuthResponseObjectFragment) => void;
 }
 
 const SignUpHome: React.FC<SignUpHomeProps> = ({ setEmail, setView, onAuth, setDisabled }) => {
@@ -263,7 +279,10 @@ const SignUpHome: React.FC<SignUpHomeProps> = ({ setEmail, setView, onAuth, setD
             >
               <MdEmail className="mr-2 text-lg" /> Sign Up with Email
             </button>
-            <button onClick={() => setView("login")} className="w-full text-center text-sm underline font-medium">
+            <button
+              onClick={() => setView("login")}
+              className="w-full text-center text-sm underline font-medium"
+            >
               {"Already have an account? Log in."}
             </button>
           </div>
@@ -285,7 +304,10 @@ const SignUpHome: React.FC<SignUpHomeProps> = ({ setEmail, setView, onAuth, setD
             first_name: yup.string().max(20, "Max 20 Chars").required("Required"),
             last_name: yup.string().max(20, "Max 20 Chars").required("Required"),
           })}
-          onSubmit={async (values: SignUpWithGoogleValues, { setErrors }: FormikHelpers<SignUpWithGoogleValues>) => {
+          onSubmit={async (
+            values: SignUpWithGoogleValues,
+            { setErrors }: FormikHelpers<SignUpWithGoogleValues>
+          ) => {
             setDisabled(true);
             const request = {
               registerOptions: {
@@ -304,7 +326,10 @@ const SignUpHome: React.FC<SignUpHomeProps> = ({ setEmail, setView, onAuth, setD
             });
             if (response.data?.registerWithGoogle.errors) {
               setErrors(toErrorMap(response.data.registerWithGoogle.errors));
-            } else if (response.data?.registerWithGoogle.user && response.data?.registerWithGoogle.auth) {
+            } else if (
+              response.data?.registerWithGoogle.user &&
+              response.data?.registerWithGoogle.auth
+            ) {
               onAuth(response.data.registerWithGoogle);
             }
             setDisabled(false);
@@ -389,7 +414,7 @@ interface LoginValues {
 interface LoginWithEmailProps {
   setDisabled: Dispatch<SetStateAction<boolean>>;
   setEmail: Dispatch<SetStateAction<boolean>>;
-  onAuth: (response: AuthResponse) => void;
+  onAuth: (response: AuthResponseObjectFragment) => void;
 }
 
 const LoginWithEmail: React.FC<LoginWithEmailProps> = ({ setEmail, onAuth, setDisabled }) => {
@@ -421,7 +446,10 @@ const LoginWithEmail: React.FC<LoginWithEmailProps> = ({ setEmail, onAuth, setDi
       {({ errors, touched, isSubmitting }) => (
         <Form className="w-full">
           <h1 className="text-2xl flex items-center font-bold font-display uppercase pb-2 mb-4 border-b border-solid border-gray-300">
-            <BiArrowBack onClick={() => setEmail(false)} className="cursor-pointer text-3xl mr-4 flex-shrink-0" />
+            <BiArrowBack
+              onClick={() => setEmail(false)}
+              className="cursor-pointer text-3xl mr-4 flex-shrink-0"
+            />
             Login
           </h1>
           <div className="flex items-center justify-between text-md font-semibold mb-2">
@@ -454,7 +482,9 @@ const LoginWithEmail: React.FC<LoginWithEmailProps> = ({ setEmail, onAuth, setDi
             name="password"
             type="password"
           />
-          <p className="w-full text-right mb-6 text-sm underline font-medium">Forgotten Password?</p>
+          <p className="w-full text-right mb-6 text-sm underline font-medium">
+            Forgotten Password?
+          </p>
           <LoadingButton
             className="w-full h-14 flex justify-center items-center bg-secondary text-primary rounded text-md font-bold font-display uppercase border border-solid border-secondary"
             dark
@@ -473,7 +503,7 @@ interface LoginHomeProps {
   setDisabled: Dispatch<SetStateAction<boolean>>;
   setEmail: Dispatch<SetStateAction<boolean>>;
   setView: Dispatch<SetStateAction<string>>;
-  onAuth: (response: AuthResponse) => void;
+  onAuth: (response: AuthResponseObjectFragment) => void;
 }
 
 const LoginHome: React.FC<LoginHomeProps> = ({ setEmail, setView, onAuth, setDisabled }) => {
@@ -537,7 +567,10 @@ const LoginHome: React.FC<LoginHomeProps> = ({ setEmail, setView, onAuth, setDis
         >
           <MdEmail className="mr-2 text-lg" /> Login with Email
         </button>
-        <button onClick={() => setView("signup")} className="w-full text-center text-sm underline font-medium">
+        <button
+          onClick={() => setView("signup")}
+          className="w-full text-center text-sm underline font-medium"
+        >
           {"Don't have an account? Sign Up."}
         </button>
       </div>
@@ -549,7 +582,7 @@ interface AuthModalProps {
   setVisible: Dispatch<SetStateAction<boolean>>;
   setView: Dispatch<SetStateAction<string>>;
   view: string;
-  onAuth: (response: AuthResponse) => void;
+  onAuth: (response: AuthResponseObjectFragment) => void;
 }
 
 const AuthModal: React.FC<AuthModalProps> = ({ setVisible, setView, view, onAuth }) => {
@@ -559,7 +592,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ setVisible, setView, view, onAuth
 
   return (
     <div className="w-screen h-screen z-50 fixed flex justify-center items-center">
-      <div onClick={() => !disabled && setVisible(false)} className="w-full h-full absolute bg-secondary opacity-50" />
+      <div
+        onClick={() => !disabled && setVisible(false)}
+        className="w-full h-full absolute bg-secondary opacity-50"
+      />
       <div className="w-11/12 sm:w-10/12 p-6 z-10 bg-primary flex flex-col items-center rounded-xl">
         {view === "login" ? (
           loginWithEmail ? (

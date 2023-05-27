@@ -1,0 +1,5 @@
+mutation SetPaypalMerchantId($paypalMerchantId: String!) {
+  setPaypalMerchantId(paypal_merchant_id: $paypalMerchantId) {
+    ...StoreObject
+  }
+}

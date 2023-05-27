@@ -125,7 +125,7 @@ const Create: NextPage = () => {
             source: null,
             era: null,
             style: null,
-            country: user!.country,
+            country: "",
             offer_free_shipping: false,
             shipping_price: "",
             offer_global_shipping: false,
@@ -188,7 +188,7 @@ const Create: NextPage = () => {
             );
             const uploads = await Promise.all(put_requests);
             if (uploads.every((upload) => upload === true)) {
-              router.push("/profile");
+              router.push(`/${user!.username}`);
             } else {
               await deleteProduct({ id: response.data.createProduct.id });
               setError("Something went wrong creating your product. Please retry.");

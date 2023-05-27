@@ -1,15 +1,16 @@
 query UserByUsername($username: String!) {
   userByUsername(username: $username) {
-    id
-    verified
-    email
-    username
-    token_version
-    first_name
-    last_name
-    bio
-    country
-    created_at
-    updated_at
+    ...UserObject
+    followers {
+      ...FollowObject
+    }
+    following {
+      ...FollowObject
+    }
+    store {
+      products {
+        ...ProductObject
+      }
+    }
   }
 }

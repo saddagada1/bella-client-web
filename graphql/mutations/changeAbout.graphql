@@ -1,16 +1,5 @@
 mutation ChangeAbout($changeAboutOptions: ChangeAboutInput!) {
   changeAbout(changeAboutOptions: $changeAboutOptions) {
-    id
-    verified
-    oauth_user
-    email
-    username
-    token_version
-    first_name
-    last_name
-    bio
-    country
-    created_at
-    updated_at
+    ...UserObject
   }
 }

@@ -1,29 +1,26 @@
 import { NextPage } from "next";
 import Head from "next/head";
 import React from "react";
-import { UserByUsernameDocument, UserProductsDocument } from "@/generated/graphql";
-import { useQuery } from "urql";
+import { FollowDocument, UserByUsernameDocument } from "@/generated/graphql";
+import { useMutation, useQuery } from "urql";
 import { FaStar } from "react-icons/fa";
 import Image from "next/image";
 import Link from "next/link";
 import { withUrqlClient } from "next-urql";
 import { createUrqlClient } from "@/utils/urql";
+import { useAppSelector } from "@/redux/hooks";
 
 interface UserStoreProps {
   username: string;
 }
 
 const UserStore: NextPage<UserStoreProps> = ({ username }) => {
+  const user = useAppSelector((store) => store.auth.user);
   const [{ data, fetching, error }] = useQuery({
     query: UserByUsernameDocument,
     variables: { username: username },
   });
-  const [{ data: productsData, error: productsError }] = useQuery({
-    query: UserProductsDocument,
-    variables: { user_id: data?.userByUsername.id as number },
-    pause: fetching,
-  });
-
+  const [, follow] = useMutation(FollowDocument);
   return (
     <>
       <Head>
@@ -51,26 +48,54 @@ const UserStore: NextPage<UserStoreProps> = ({ username }) => {
               ))}
             <p className="ml-1">(0)</p>
           </div>
-          <button className="font-display font-medium text-sm uppercase py-2 px-3 border border-solid border-secondary rounded bg-secondary text-primary absolute bottom-0">
-            Follow
-          </button>
+          {user?.id === data?.userByUsername.id ? (
+            <Link
+              className="font-display font-medium text-sm uppercase py-2 px-3 border border-solid border-secondary rounded bg-secondary text-primary absolute bottom-0"
+              href="/settings"
+            >
+              Edit Profile
+            </Link>
+          ) : (
+            <button
+              onClick={async () => {
+                await follow({ id: data!.userByUsername.id });
+              }}
+              className="font-display font-medium text-sm uppercase py-2 px-3 border border-solid border-secondary rounded bg-secondary text-primary absolute bottom-0"
+            >
+              {!data?.userByUsername.followers.find(
+                (follower) => follower.followed_by_id === user?.id
+              )
+                ? "Follow"
+                : "Unfollow"}
+            </button>
+          )}
         </div>
       </div>
       <div className="py-2 mx-4 border-b border-solid border-gray-300 flex justify-between items-center">
         <div>
-          <p className="font-display font-medium text-sm">32</p>
+          <p className="font-display font-medium text-sm">
+            {data?.userByUsername?.store
+              ? data.userByUsername.store.products.filter((product) => product.sold === true).length
+              : 0}
+          </p>
           <p className="font-medium text-sm">Sold</p>
         </div>
         <div>
-          <p className="font-display font-medium text-sm">12</p>
+          <p className="font-display font-medium text-sm">
+            {data?.userByUsername?.store ? data.userByUsername.store.products.length : 0}
+          </p>
           <p className="font-medium text-sm">Items</p>
         </div>
         <div>
-          <p className="font-display font-medium text-sm">1232</p>
+          <p className="font-display font-medium text-sm">
+            {data?.userByUsername.followers.length}
+          </p>
           <p className="font-medium text-sm">Followers</p>
         </div>
         <div>
-          <p className="font-display font-medium text-sm">1345</p>
+          <p className="font-display font-medium text-sm">
+            {data?.userByUsername?.following.length}
+          </p>
           <p className="font-medium text-sm">Following</p>
         </div>
       </div>
@@ -80,9 +105,9 @@ const UserStore: NextPage<UserStoreProps> = ({ username }) => {
         </div>
       )}
       <div className="mx-4 mt-4 grid grid-cols-3 auto-rows-fr gap-2">
-        {productsData?.userProducts!.map((product, index) => (
+        {data?.userByUsername?.store?.products.map((product, index) => (
           <Link
-            href={`/products/${product.name}?id=${product.id}`}
+            href={`/products/${encodeURIComponent(product.name)}?id=${product.id}`}
             key={index}
             className="aspect-square rounded-xl relative overflow-hidden will-change-transform transition-transform duration-500 hover:scale-95"
           >

@@ -143,7 +143,6 @@ interface AboutValues {
   first_name: string;
   last_name: string;
   bio: string;
-  country: string;
 }
 
 interface SecurityValues {
@@ -412,7 +411,6 @@ const Settings: NextPage = () => {
             first_name: user!.first_name,
             last_name: user!.last_name,
             bio: user!.bio,
-            country: user!.country,
           }}
           validationSchema={yup.object().shape({
             first_name: yup.string().max(20, "Max 20 Chars"),
@@ -494,7 +492,7 @@ const Settings: NextPage = () => {
               <p className="w-full text-right text-sm text-gray-500">
                 {values.bio ? 500 - values.bio.length : 500} Chars Left
               </p>
-              <div className="flex items-center justify-between text-md font-semibold mb-2">
+              {/* <div className="flex items-center justify-between text-md font-semibold mb-2">
                 <label htmlFor="country">Country</label>
                 {errors.country && touched.country && (
                   <div className="bg-red-100 text-xs sm:text-sm font-medium text-red-500 border border-solid border-red-500 px-2 py-0.5 rounded">
@@ -531,7 +529,7 @@ const Settings: NextPage = () => {
                   value: country.name,
                   label: country.name,
                 }))}
-              />
+              /> */}
               <LoadingButton
                 className="w-full h-14 flex justify-center items-center bg-secondary text-primary rounded text-md font-bold font-display uppercase border border-solid border-secondary"
                 dark

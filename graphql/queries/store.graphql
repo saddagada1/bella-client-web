@@ -1,0 +1,5 @@
+query Store {
+  store {
+    ...StoreObject
+  }
+}

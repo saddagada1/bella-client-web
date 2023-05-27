@@ -1,26 +1,5 @@
 mutation Register($registerOptions: RegisterInput!) {
   register(registerOptions: $registerOptions) {
-    errors {
-      field
-      message
-    }
-    user {
-      id
-      verified
-      oauth_user
-      email
-      username
-      token_version
-      first_name
-      last_name
-      bio
-      country
-      created_at
-      updated_at
-    }
-    auth {
-      access_token
-      expires_in
-    }
+    ...AuthResponseObject
   }
 }

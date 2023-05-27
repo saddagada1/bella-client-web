@@ -1,0 +1,5 @@
+fragment CartObject on Cart {
+  id
+  store_id
+  user_id
+}

@@ -1,0 +1,8 @@
+fragment UserResponseObject on UserResponse {
+  errors {
+    ...FieldErrorObject
+  }
+  user {
+    ...UserObject
+  }
+}

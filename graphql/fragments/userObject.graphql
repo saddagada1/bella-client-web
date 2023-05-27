@@ -1,0 +1,14 @@
+fragment UserObject on User {
+  id
+  verified
+  oauth_user
+  email
+  username
+  token_version
+  first_name
+  last_name
+  bio
+  has_store
+  updated_at
+  created_at
+}

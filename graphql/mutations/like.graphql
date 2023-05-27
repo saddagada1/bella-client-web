@@ -1,0 +1,3 @@
+mutation Like($id: Float!) {
+  like(id: $id)
+}

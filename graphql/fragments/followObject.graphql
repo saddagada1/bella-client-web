@@ -1,0 +1,6 @@
+fragment FollowObject on Follow {
+  id
+  followed_by_id
+  followed_id
+  created_at
+}
