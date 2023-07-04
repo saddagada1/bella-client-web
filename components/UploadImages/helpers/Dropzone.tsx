@@ -16,7 +16,10 @@ const Dropzone: React.FC<DropzoneProps> = ({ onDrop, accept, maxFiles }) => {
   });
 
   return (
-    <div className="w-full aspect-[16/5] border border-dashed border-secondary rounded" {...getRootProps()}>
+    <div
+      className="w-full aspect-[16/5] border border-dashed border-secondary rounded"
+      {...getRootProps()}
+    >
       <input className="dropzone-input" {...getInputProps()} />
       <div className="w-full h-full flex flex-col justify-center items-center font-medium text-sm text-gray-400">
         <p className="flex items-center">

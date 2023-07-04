@@ -1,3 +1,5 @@
 mutation Like($id: Float!) {
-  like(id: $id)
+  like(id: $id) {
+    ...LikeObject
+  }
 }

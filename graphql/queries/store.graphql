@@ -1,5 +1,8 @@
 query Store {
   store {
     ...StoreObject
+    products {
+      ...ProductObject
+    }
   }
 }

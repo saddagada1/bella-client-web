@@ -8,6 +8,8 @@ fragment UserObject on User {
   first_name
   last_name
   bio
+  num_followers
+  num_following
   has_store
   updated_at
   created_at

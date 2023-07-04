@@ -1,5 +1,0 @@
-mutation SetPaypalMerchantStatus($paypalMerchantStatus: Boolean!) {
-  setPaypalMerchantStatus(paypal_merchant_status: $paypalMerchantStatus) {
-    ...StoreObject
-  }
-}

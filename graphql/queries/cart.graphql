@@ -1,0 +1,20 @@
+query Cart($cartId: Float!) {
+  cart(cart_id: $cartId) {
+    ...CartObject
+    cart_items {
+      ...CartItemObject
+    }
+    user {
+      ...UserObject
+      addresses {
+        ...AddressObject
+      }
+    }
+    store {
+      ...StoreObject
+      user {
+        ...UserObject
+      }
+    }
+  }
+}

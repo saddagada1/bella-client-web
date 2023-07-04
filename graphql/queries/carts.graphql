@@ -1,0 +1,14 @@
+query Carts {
+  carts {
+    ...CartObject
+    cart_items {
+      ...CartItemObject
+    }
+    store {
+      ...StoreObject
+      user {
+        ...UserObject
+      }
+    }
+  }
+}

@@ -11,22 +11,12 @@ import { Classifiers } from "@/utils/types";
 import { fetcher } from "@/utils/fetcher";
 import clsx from "clsx";
 import { useMutation, useQuery } from "urql";
-import {
-  CreateStoreDocument,
-  PaypalMerchantLinkDocument,
-  StoreDocument,
-} from "@/generated/graphql";
+import { CreateStoreDocument, StoreDocument } from "@/generated/graphql";
 import { setUser } from "@/redux/slices/authSlice";
-
-const Dashboard: React.FC = () => {
-  const [{ data: storeData, fetching: storeFetching }] = useQuery({ query: StoreDocument });
-  const [{ data }] = useQuery({
-    query: PaypalMerchantLinkDocument,
-    variables: { storeId: storeData?.store.id as number },
-    pause: storeFetching,
-  });
-  return <div>dash</div>;
-};
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { FiSettings, FiGrid, FiPlusSquare } from "react-icons/fi";
+import Image from "next/image";
 
 interface CreateStoreValues {
   first_name: string;
@@ -47,6 +37,8 @@ const CreateStore: React.FC = () => {
     revalidateOnFocus: false,
   });
   const [, createStore] = useMutation(CreateStoreDocument);
+  const router = useRouter();
+
   return (
     <Formik
       initialValues={{
@@ -57,7 +49,7 @@ const CreateStore: React.FC = () => {
         city: "",
         province: "",
         zip: "",
-        country: "",
+        country: "CA",
       }}
       validationSchema={yup.object().shape({
         first_name: yup.string().required("Required"),
@@ -69,12 +61,13 @@ const CreateStore: React.FC = () => {
         country: yup.string().required("Required"),
       })}
       onSubmit={async (values: CreateStoreValues) => {
-        const response = await createStore({ createStoreInput: values });
+        await createStore({ createStoreInput: values });
         dispatch(setUser({ user: { ...user!, has_store: true } }));
+        router.push("/store/settings");
       }}
     >
-      {({ errors, touched, isSubmitting, setFieldValue }) => (
-        <Form className="w-full pb-10">
+      {({ errors, touched, isSubmitting, setFieldValue, values }) => (
+        <Form className="w-full">
           <h2 className="text-lg font-bold font-display uppercase mt-9 pb-4 mb-4 border-b border-solid border-gray-300">
             Billing Address
           </h2>
@@ -196,25 +189,25 @@ const CreateStore: React.FC = () => {
                   isSelected && "bg-secondary text-primary"
                 ),
             }}
+            isDisabled
             unstyled
-            placeholder=""
+            placeholder="Canada"
             isClearable
             onChange={(option, trigger) => {
               if (option) {
-                setFieldValue("country", option.label);
+                setFieldValue("country", option.value);
               }
               if (trigger.action === "clear") {
                 setFieldValue("country", "");
               }
             }}
             options={data?.countries.map((country) => ({
-              value: country.name,
+              value: country.code,
               label: country.name,
             }))}
           />
-
           <LoadingButton
-            className="w-full h-14 mt-6 mb-12 text-md font-bold font-display flex justify-center items-center bg-secondary text-primary uppercase rounded border border-solid border-secondary"
+            className="w-full h-14 mt-6 text-md font-bold font-display flex justify-center items-center bg-secondary text-primary uppercase rounded border border-solid border-secondary"
             dark
             loading={isSubmitting}
             disabled={isSubmitting}
@@ -229,16 +222,98 @@ const CreateStore: React.FC = () => {
 
 const Store: NextPage = () => {
   const user = useAppSelector((store) => store.auth.user);
+  const [{ data, fetching }] = useQuery({ query: StoreDocument, pause: !user!.has_store });
   return (
     <>
       <Head>
         <title>Your Store - Bella</title>
       </Head>
-      <div className="px-4 pt-10">
-        <h1 className="text-2xl font-black font-display uppercase pb-6 border-b border-solid border-gray-300">
-          Your Store
-        </h1>
-        {user!.has_store ? <Dashboard /> : <CreateStore />}
+      <div className="px-4 py-10">
+        <div className="text-2xl pb-6 border-b border-solid border-gray-300 flex justify-between">
+          <h1 className="font-black font-display uppercase leading-none">Your Store</h1>
+          {user!.has_store && (
+            <div className="flex gap-4">
+              <Link href="/store">
+                <FiGrid />
+              </Link>
+              {data?.store.stripe_setup && (
+                <Link href="/products/create">
+                  <FiPlusSquare />
+                </Link>
+              )}
+              <Link href="/store/settings">
+                <FiSettings />
+              </Link>
+            </div>
+          )}
+        </div>
+        {user!.has_store ? (
+          <>
+            <h2 className="text-lg font-bold font-display uppercase mt-9 pb-4 mb-4 border-b border-solid border-gray-300">
+              This Week
+            </h2>
+            <div className="h-24 flex gap-2 text-md font-semibold">
+              <Link
+                href="/store/stats"
+                className="w-1/3 flex justify-center items-end bg-gray-200 rounded-xl border border-gray-500 border-solid relative"
+              >
+                <p className="absolute top-2 left-3">Sold</p>
+                <span className="font-display font-bold text-2xl mb-6">0</span>
+              </Link>
+              <Link
+                href="/store/stats"
+                className="flex-1 flex justify-center items-end bg-gray-200 rounded-xl border border-gray-500 border-solid relative"
+              >
+                <p className="absolute top-2 left-3">Revenue</p>
+                <span className="font-display font-bold text-2xl mb-6">CA$0</span>
+              </Link>
+            </div>
+            <h2 className="text-lg font-bold font-display uppercase mt-9 pb-4 mb-4 border-b border-solid border-gray-300">
+              Selling
+            </h2>
+            <div className="mt-4 flex gap-2">
+              {data?.store.products
+                .filter((product) => !product.sold)
+                .map((product, index) => (
+                  <Link
+                    href={`/products/${encodeURIComponent(product.name)}?id=${product.id}`}
+                    key={index}
+                    className="aspect-square w-1/3 rounded-xl relative overflow-hidden will-change-transform transition-transform duration-500 hover:scale-95"
+                  >
+                    <Image
+                      src={product.images[0]}
+                      alt={product.name}
+                      fill
+                      className="object-cover"
+                    />
+                  </Link>
+                ))}
+            </div>
+            <h2 className="text-lg font-bold font-display uppercase mt-9 pb-4 mb-4 border-b border-solid border-gray-300">
+              Sold
+            </h2>
+            <div className="mx-4 mt-4 grid grid-cols-3 auto-rows-fr gap-2">
+              {data?.store.products
+                .filter((product) => product.sold)
+                .map((product, index) => (
+                  <Link
+                    href={`/products/${encodeURIComponent(product.name)}?id=${product.id}`}
+                    key={index}
+                    className="aspect-square rounded-xl relative overflow-hidden will-change-transform transition-transform duration-500 hover:scale-95"
+                  >
+                    <Image
+                      src={product.images[0]}
+                      alt={product.name}
+                      fill
+                      className="object-cover"
+                    />
+                  </Link>
+                ))}
+            </div>
+          </>
+        ) : (
+          <CreateStore />
+        )}
       </div>
     </>
   );

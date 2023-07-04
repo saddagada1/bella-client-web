@@ -3,7 +3,7 @@ import { Dispatch, SetStateAction, useState } from "react";
 import { FiSearch, FiUser, FiShoppingBag, FiArrowRight, FiHome } from "react-icons/fi";
 import { GrMenu } from "react-icons/gr";
 import { useMutation, useQuery } from "urql";
-import { LogoutDocument } from "@/generated/graphql";
+import { CartsDocument, LogoutDocument } from "@/generated/graphql";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { resetAuthentication, setAuthentication } from "@/redux/slices/authSlice";
 import { calcExpiresIn } from "@/utils/calc";
@@ -158,7 +158,7 @@ const Navbar: React.FC = () => {
   const auth = useAppSelector((store) => store.auth);
   const router = useRouter();
   const [query, setQuery] = useState("");
-  // const [{ data, error }] = useQuery({ query: CartsDocument, pause: !auth.isAuthenticated });
+  const [{ data, error }] = useQuery({ query: CartsDocument, pause: !auth.isAuthenticated });
 
   return (
     <>
@@ -194,8 +194,12 @@ const Navbar: React.FC = () => {
                 </Link>
                 <Link className="ml-6 text-3xl relative" href="/bag">
                   <FiShoppingBag />
-                  <span className="absolute -top-1 -right-1 px-1 pt-0.5 bg-red-500 text-primary text-xs rounded-md">
-                    0
+                  <span className="absolute -top-1 -right-1 px-1 py-0.5 bg-red-500 text-primary text-xs rounded-md">
+                    {!data || !data.carts.length
+                      ? 0
+                      : data?.carts
+                          .map((cart) => cart.cart_items.length)
+                          .reduce((currentSum, value) => currentSum + value)}
                   </span>
                 </Link>
               </>

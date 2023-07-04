@@ -1,3 +1,5 @@
 mutation Follow($id: Float!) {
-  follow(id: $id)
+  follow(id: $id) {
+    ...FollowObject
+  }
 }

@@ -17,11 +17,10 @@ fragment ProductObject on Product {
   country
   offer_free_shipping
   shipping_price
-  offer_global_shipping
-  global_shipping_price
   price
   sold
   store_id
+  num_likes
   updated_at
   created_at
 }

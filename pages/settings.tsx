@@ -182,7 +182,7 @@ const Settings: NextPage = () => {
         </button>
       )}
       <div className="pt-10 pb-20 px-4">
-        <h1 className="text-2xl font-black font-display uppercase pb-6 border-b border-solid border-gray-300">
+        <h1 className="text-2xl font-black font-display uppercase pb-6 border-b border-solid border-gray-300 leading-none">
           Edit Profile
         </h1>
         <Formik

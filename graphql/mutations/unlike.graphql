@@ -1,0 +1,3 @@
+mutation Unlike($id: Float!) {
+  unlike(id: $id)
+}

@@ -85,8 +85,6 @@ interface CreateValues {
   country: string;
   offer_free_shipping: boolean;
   shipping_price: string;
-  offer_global_shipping: boolean;
-  global_shipping_price: string;
   price: string;
 }
 
@@ -125,11 +123,9 @@ const Create: NextPage = () => {
             source: null,
             era: null,
             style: null,
-            country: "",
+            country: "CA",
             offer_free_shipping: false,
             shipping_price: "",
-            offer_global_shipping: false,
-            global_shipping_price: "",
             price: "",
           } as CreateValues
         }
@@ -158,11 +154,6 @@ const Create: NextPage = () => {
             then: () => yup.string().required("Required"),
             otherwise: () => yup.string(),
           }),
-          global_shipping_price: yup.string().when("offer_global_shipping", {
-            is: (offer_global_shipping: boolean) => offer_global_shipping,
-            then: () => yup.string().required("Required"),
-            otherwise: () => yup.string(),
-          }),
           price: yup.string().required("Required"),
         })}
         onSubmit={async (values: CreateValues) => {
@@ -175,9 +166,6 @@ const Create: NextPage = () => {
               num_of_images: values.images.length,
               size: values.size === null ? "One Size" : values.size,
               shipping_price: values.offer_free_shipping ? 0.0 : parseFloat(values.shipping_price),
-              global_shipping_price: !values.offer_global_shipping
-                ? 0.0
-                : parseFloat(values.global_shipping_price),
               price: parseFloat(values.price),
             },
           };
@@ -201,8 +189,8 @@ const Create: NextPage = () => {
         }}
       >
         {({ errors, touched, values, setFieldValue, isSubmitting }) => (
-          <Form className="w-full pt-10 sm:pb-28 px-4">
-            <h1 className="text-2xl font-black font-display uppercase pb-6 border-b border-solid border-gray-300">
+          <Form className="w-full py-10 px-4">
+            <h1 className="text-2xl font-black font-display uppercase pb-6 border-b border-solid border-gray-300 leading-none">
               New Product
             </h1>
             <h2 className="text-lg font-bold font-display uppercase mt-9 pb-4 mb-4 border-b border-solid border-gray-300">
@@ -727,22 +715,20 @@ const Create: NextPage = () => {
                     isSelected && "bg-secondary text-primary"
                   ),
               }}
-              defaultValue={
-                values.country ? { value: values.country, label: values.country } : undefined
-              }
+              isDisabled
               unstyled
-              placeholder=""
+              placeholder="Canada"
               isClearable
               onChange={(option, trigger) => {
                 if (option) {
-                  setFieldValue("country", option.label);
+                  setFieldValue("country", option.value);
                 }
                 if (trigger.action === "clear") {
                   setFieldValue("country", "");
                 }
               }}
               options={data?.countries.map((country) => ({
-                value: country.name,
+                value: country.code,
                 label: country.name,
               }))}
             />
@@ -792,49 +778,6 @@ const Create: NextPage = () => {
                 </div>
               </>
             )}
-            <div className="w-2/3 sm:w-1/2 flex items-center text-md font-semibold mb-6">
-              <div
-                onClick={() => {
-                  setFieldValue("offer_global_shipping", !values.offer_global_shipping);
-                  setFieldValue("global_shipping_price", "");
-                }}
-                className={`w-5 aspect-square mr-4 flex justify-center items-center border border-solid border-secondary rounded ${
-                  values.offer_global_shipping && "bg-secondary"
-                }`}
-              >
-                {values.offer_global_shipping && <FiCheck className="text-sm text-primary" />}
-              </div>
-              <label htmlFor="offer_global_shipping">Offer Global Shipping</label>
-            </div>
-            {values.offer_global_shipping && (
-              <>
-                <div className="w-2/3 sm:w-1/2 flex items-center justify-between text-md font-semibold mb-2">
-                  <label htmlFor="global_shipping">Global Shipping</label>
-                  {errors.global_shipping_price && touched.global_shipping_price && (
-                    <div className="bg-red-100 text-xs sm:text-sm font-medium text-red-500 border border-solid border-red-500 px-2 py-0.5 rounded">
-                      {errors.global_shipping_price}
-                    </div>
-                  )}
-                </div>
-                <div className="w-2/3 sm:w-1/2 flex text-md font-medium p-3 mb-4 border border-solid border-secondary rounded">
-                  <span className="font-display mr-1">CA$</span>
-                  <input
-                    className="bg-transparent focus:outline-none"
-                    type="text"
-                    value={values.global_shipping_price}
-                    onChange={(event) => {
-                      const currencyRegex = /^[1-9]+[0-9]*(\.[0-9]{0,2})?$/;
-                      if (
-                        currencyRegex.test(event.currentTarget.value) ||
-                        event.currentTarget.value === ""
-                      ) {
-                        setFieldValue("global_shipping_price", event.currentTarget.value);
-                      }
-                    }}
-                  />
-                </div>
-              </>
-            )}
             <h2 className="text-lg font-bold font-display uppercase mt-9 pb-4 mb-4 border-b border-solid border-gray-300">
               Pricing
             </h2>
@@ -863,16 +806,14 @@ const Create: NextPage = () => {
                 }}
               />
             </div>
-            <div className="text-md font-bold font-display uppercase border-t border-solid border-gray-300 sm:fixed sm:z-20 sm:w-full sm:px-4 sm:bottom-0 sm:left-0 sm:bg-primary">
-              <LoadingButton
-                className="w-full h-14 mt-6 mb-12 flex justify-center items-center bg-secondary text-primary uppercase rounded border border-solid border-secondary"
-                dark
-                loading={isSubmitting}
-                disabled={isSubmitting}
-              >
-                Post
-              </LoadingButton>
-            </div>
+            <LoadingButton
+              className="w-full h-14 mt-6 text-md font-bold font-display flex justify-center items-center bg-secondary text-primary uppercase rounded border border-solid border-secondary"
+              dark
+              loading={isSubmitting}
+              disabled={isSubmitting}
+            >
+              Post
+            </LoadingButton>
           </Form>
         )}
       </Formik>

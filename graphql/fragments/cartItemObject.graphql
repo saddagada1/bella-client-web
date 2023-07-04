@@ -1,6 +1,7 @@
 fragment CartItemObject on CartItem {
   id
   name
+  quantity
   price
   shipping_price
   images

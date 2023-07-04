@@ -1,0 +1,14 @@
+mutation AddProductToCart($quantity: Float!, $productId: Float!) {
+  addProductToCart(quantity: $quantity, id: $productId) {
+    ...CartObject
+    cart_items {
+      ...CartItemObject
+    }
+    store {
+      ...StoreObject
+      user {
+        ...UserObject
+      }
+    }
+  }
+}

@@ -1,7 +1,5 @@
-fragment StoreObject on Store {
+fragment AddressObject on Address {
   id
-  stripe_account_id
-  stripe_setup
   first_name
   last_name
   line_1

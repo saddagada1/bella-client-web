@@ -8,6 +8,7 @@ query UserByUsername($username: String!) {
       ...FollowObject
     }
     store {
+      ...StoreObject
       products {
         ...ProductObject
       }
